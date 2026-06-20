@@ -24,7 +24,7 @@ export default function (eleventyConfig) {
     // Please use an app-password!
     password: "app-password-xyz",
     // Optional: PDS URL, defaults to "https://bsky.social"
-    pds: "https://bsky.social",
+    pds: "https://bsky.social"
   });
 }
 ```
