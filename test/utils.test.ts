@@ -49,9 +49,7 @@ describe("normalizePdsUrl", () => {
   });
 
   it("throws when URL is whitespace only", () => {
-    expect(() => normalizePdsUrl("   ")).toThrow(
-      "PDS URL cannot be empty after normalization."
-    );
+    expect(() => normalizePdsUrl("   ")).toThrow("PDS URL cannot be empty after normalization.");
   });
 
   it("throws when URL becomes empty after removing trailing slash", () => {
