@@ -1,64 +1,16 @@
-const ENDPOINTS = {
-  createSession: "/xrpc/com.atproto.server.createSession",
-  createRecord: "/xrpc/com.atproto.repo.createRecord",
-  putRecord: "/xrpc/com.atproto.repo.putRecord",
-  listRecords: "/xrpc/com.atproto.repo.listRecords"
-};
-
-export const LEXICONS = {
-  publication: "site.standard.publication",
-  document: "site.standard.document"
-};
-
-export interface PublisherOptions {
-  pds?: string;
-  identifier?: string;
-  password?: string;
-}
-
-interface SessionResponse {
-  accessJwt: string;
-}
-
-interface Record {
-  cid: string;
-  uri: string;
-  value: object;
-}
-
-interface CreateOrPutRecordResponse {
-  uri: string;
-  cid: string;
-  commit: {
-    cid: string;
-    rev: string;
-  };
-  validationStatus: string;
-}
-
-interface ListRecordsResponse {
-  cursor: string | null;
-  records: Record[];
-}
-
-export interface Publication {
-  $type: string;
-  url: string;
-  name: string;
-  description: string;
-  preferences: {
-    showInDiscover: boolean;
-  };
-}
-
-export interface PublicationWithUri extends Publication {
-  uri: string;
-}
-
-interface Publisher {
-  startSession: () => Promise<void>;
-  createOrUpdatePublicationRecord: (publication: Publication) => Promise<string>;
-}
+import {
+  ENDPOINTS,
+  LEXICONS,
+  PublisherOptions,
+  SessionResponse,
+  Record,
+  CreateOrPutRecordResponse,
+  ListRecordsResponse,
+  Publication,
+  PublicationWithUri,
+  Publisher
+} from "./types";
+import { extractRecordKey, normalizePdsUrl, normalizeIdentifier } from "./utils";
 
 export function createPublisher({ pds, identifier, password }: PublisherOptions): Publisher {
   if (!pds || !identifier || !password) {
@@ -239,33 +191,4 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
       return recordUri;
     }
   };
-}
-
-function extractRecordKey(uri: string): string {
-  const parts = uri.split("/");
-  return parts[parts.length - 1];
-}
-
-function normalizePdsUrl(url: string): string {
-  let normalizedUrl = url.trim();
-
-  if (!normalizedUrl.startsWith("http://") && !normalizedUrl.startsWith("https://")) {
-    normalizedUrl = `https://${normalizedUrl}`;
-  }
-
-  if (normalizedUrl.endsWith("/")) {
-    normalizedUrl = normalizedUrl.slice(0, -1);
-  }
-
-  return normalizedUrl;
-}
-
-function normalizeIdentifier(identifier: string): string {
-  let normalizedIdentifier = identifier.trim();
-
-  if (normalizedIdentifier.startsWith("@")) {
-    normalizedIdentifier = normalizedIdentifier.slice(1);
-  }
-
-  return normalizedIdentifier;
 }

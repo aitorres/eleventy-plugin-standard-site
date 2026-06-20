@@ -31,7 +31,7 @@ export default function (eleventyConfig) {
     // Optional: whether the publication should appear in discovery feeds, defaults to true
     showInDiscover: true,
     // Optional: PDS URL, defaults to "https://bsky.social"
-    pds: "https://bsky.social",
+    pds: "https://bsky.social"
   });
 }
 ```

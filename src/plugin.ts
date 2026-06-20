@@ -1,13 +1,7 @@
-import { createPublisher, type PublisherOptions, type Publication, LEXICONS } from "./publisher";
+import { createPublisher } from "./publisher";
+import { LEXICONS, Publication, StandardSitePluginOptions } from "./types";
 import path from "path";
 import fs from "fs";
-
-type StandardSitePluginOptions = Partial<PublisherOptions> & {
-  publicationName: string;
-  publicationDescription: string;
-  publicationUrl: string;
-  showInDiscover?: boolean;
-};
 
 const DEFAULT_OPTIONS: Partial<StandardSitePluginOptions> = {
   pds: "https://bsky.social",
