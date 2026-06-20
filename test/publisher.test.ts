@@ -160,6 +160,76 @@ describe("createPublisher", () => {
     );
   });
 
+  it("creates a publication record when listing existing records fails", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response("Server error", {
+          status: 500,
+          statusText: "Internal Server Error"
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            uri: "at://did:plc:abc123/site.standard.publication/fallback-record-key",
+            cid: "cid-1",
+            commit: {
+              cid: "commit-cid-1",
+              rev: "rev-1"
+            },
+            validationStatus: "valid"
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        )
+      );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const publisher = createPublisher({
+      pds: "https://bsky.social",
+      identifier: "did:plc:abc123",
+      password: "app-password"
+    });
+
+    await publisher.startSession();
+
+    const uri = await publisher.createOrUpdatePublicationRecord({
+      $type: "site.standard.publication",
+      url: "https://example.com",
+      name: "Example",
+      description: "Example description",
+      preferences: {
+        showInDiscover: true
+      }
+    });
+
+    expect(uri).toBe("at://did:plc:abc123/site.standard.publication/fallback-record-key");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "https://bsky.social/xrpc/com.atproto.repo.createRecord",
+      expect.objectContaining({ method: "POST" })
+    );
+
+    consoleErrorSpy.mockRestore();
+  });
+
   it("updates a publication record when matching url already exists", async () => {
     const fetchMock = vi
       .fn()
