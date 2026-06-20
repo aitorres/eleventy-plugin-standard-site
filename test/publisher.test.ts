@@ -247,4 +247,170 @@ describe("createPublisher", () => {
       expect.objectContaining({ method: "POST" })
     );
   });
+
+  it("throws when creating or updating document before session starts", async () => {
+    vi.stubGlobal("fetch", vi.fn());
+
+    const publisher = createPublisher({
+      pds: "https://bsky.social",
+      identifier: "did:plc:abc123",
+      password: "app-password"
+    });
+
+    await expect(
+      publisher.createOrUpdateDocumentRecord({
+        site: "at://did:plc:abc123/site.standard.publication/publication-key",
+        title: "A post",
+        publishedAt: new Date("2026-01-01T00:00:00.000Z"),
+        path: "/posts/a-post/"
+      })
+    ).rejects.toThrow("Session not started. Call startSession() before making requests.");
+  });
+
+  it("creates a document record when no matching record exists", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ cursor: null, records: [] }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            uri: "at://did:plc:abc123/site.standard.document/new-record-key",
+            cid: "cid-3",
+            commit: {
+              cid: "commit-cid-3",
+              rev: "rev-3"
+            },
+            validationStatus: "valid"
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        )
+      );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const publisher = createPublisher({
+      pds: "https://bsky.social",
+      identifier: "did:plc:abc123",
+      password: "app-password"
+    });
+
+    await publisher.startSession();
+
+    const uri = await publisher.createOrUpdateDocumentRecord({
+      site: "at://did:plc:abc123/site.standard.publication/publication-key",
+      title: "A post",
+      publishedAt: new Date("2026-01-01T00:00:00.000Z"),
+      path: "/posts/a-post/"
+    });
+
+    expect(uri).toBe("at://did:plc:abc123/site.standard.document/new-record-key");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "https://bsky.social/xrpc/com.atproto.repo.createRecord",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("updates a document record when matching path already exists", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            cursor: null,
+            records: [
+              {
+                cid: "existing-doc-cid",
+                uri: "at://did:plc:abc123/site.standard.document/existing-doc-key",
+                value: {
+                  site: "at://did:plc:abc123/site.standard.publication/publication-key",
+                  title: "Existing post",
+                  publishedAt: "2026-01-01T00:00:00.000Z",
+                  path: "/posts/a-post/"
+                }
+              }
+            ]
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            uri: "at://did:plc:abc123/site.standard.document/existing-doc-key",
+            cid: "cid-4",
+            commit: {
+              cid: "commit-cid-4",
+              rev: "rev-4"
+            },
+            validationStatus: "valid"
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        )
+      );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const publisher = createPublisher({
+      pds: "https://bsky.social",
+      identifier: "did:plc:abc123",
+      password: "app-password"
+    });
+
+    await publisher.startSession();
+
+    const uri = await publisher.createOrUpdateDocumentRecord({
+      site: "at://did:plc:abc123/site.standard.publication/publication-key",
+      title: "Updated post",
+      publishedAt: new Date("2026-01-02T00:00:00.000Z"),
+      path: "/posts/a-post/"
+    });
+
+    expect(uri).toBe("at://did:plc:abc123/site.standard.document/existing-doc-key");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "https://bsky.social/xrpc/com.atproto.repo.putRecord",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
 });

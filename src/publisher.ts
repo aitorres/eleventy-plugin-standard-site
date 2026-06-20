@@ -8,7 +8,9 @@ import {
   ListRecordsResponse,
   Publication,
   PublicationWithUri,
-  Publisher
+  Publisher,
+  Document,
+  DocumentWithUri
 } from "./types";
 import { extractRecordKey, normalizePdsUrl, normalizeIdentifier } from "./utils";
 
@@ -105,6 +107,19 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
     return (await response.json()) as CreateOrPutRecordResponse;
   };
 
+  const getSiteDocumentRecords = async (site: string): Promise<DocumentWithUri[]> => {
+    try {
+      const records = await listRecords(LEXICONS.document);
+      return records
+        .filter((record) => (record.value as Document).site === site)
+        .map((record) => ({ ...(record.value as Document), uri: record.uri }));
+    } catch (err) {
+      console.error("Error fetching document records:", err);
+    }
+
+    return [];
+  };
+
   const putRecord = async (
     collection: string,
     recordKey: string,
@@ -186,6 +201,43 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
       const recordKey = extractRecordKey(recordUri);
       console.log(
         `Publication record for URL ${publication.url} available at URI: ${recordUri} (record key: ${recordKey})`
+      );
+
+      return recordUri;
+    },
+
+    createOrUpdateDocumentRecord: async (document: Document): Promise<string> => {
+      checkSession();
+
+      // Try getting existing record to determine if we need to create or update
+      const existingRecords = await getSiteDocumentRecords(document.site);
+      const existingRecord = existingRecords.find((record) => record.path === document.path);
+
+      let recordUri: string | undefined;
+      if (existingRecord) {
+        console.log(`Existing document record found for path ${document.path}, updating...`);
+
+        const existingRecordUri = existingRecord.uri;
+        const existingRecordKey = extractRecordKey(existingRecordUri);
+
+        const updateRecordResponse = await putRecord(
+          LEXICONS.document,
+          existingRecordKey,
+          document
+        );
+        recordUri = updateRecordResponse.uri;
+      } else {
+        console.log(
+          `No existing document record found for path ${document.path}, creating new record...`
+        );
+
+        const newRecordResponse = await createRecord(LEXICONS.document, document);
+        recordUri = newRecordResponse.uri;
+      }
+
+      const recordKey = extractRecordKey(recordUri);
+      console.log(
+        `Document record for path ${document.path} available at URI: ${recordUri} (record key: ${recordKey})`
       );
 
       return recordUri;

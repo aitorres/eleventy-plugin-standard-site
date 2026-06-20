@@ -51,18 +51,33 @@ export interface Publication {
   };
 }
 
+export interface Document {
+  site: string;
+  title: string;
+  publishedAt: Date;
+  path?: string;
+  description?: string;
+  bskyPostRef?: string;
+}
+
 export interface PublicationWithUri extends Publication {
+  uri: string;
+}
+
+export interface DocumentWithUri extends Document {
   uri: string;
 }
 
 export interface Publisher {
   startSession: () => Promise<void>;
   createOrUpdatePublicationRecord: (publication: Publication) => Promise<string>;
+  createOrUpdateDocumentRecord: (document: Document) => Promise<string>;
 }
 
 export type StandardSitePluginOptions = Partial<PublisherOptions> & {
   publicationName: string;
   publicationDescription: string;
   publicationUrl: string;
+  standardSiteDocumentTag?: string;
   showInDiscover?: boolean;
 };
