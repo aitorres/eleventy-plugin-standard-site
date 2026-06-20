@@ -14,7 +14,7 @@ describe("createPublisher", () => {
     );
   });
 
-  it("normalizes pds URL and returns accessJwt", async () => {
+  it("starts session and normalizes pds url and identifier", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
         status: 200,
@@ -27,18 +27,25 @@ describe("createPublisher", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const publisher = createPublisher({
-      pds: "bsky.social/",
-      identifier: "did:plc:abc123",
+      pds: "bsky.social",
+      identifier: "@alice.bsky.social",
       password: "app-password"
     });
 
-    await expect(publisher.createSession()).resolves.toBe("jwt-123");
+    publisher.startSession();
 
     expect(fetchMock).toHaveBeenCalledWith(
       "https://bsky.social/xrpc/com.atproto.server.createSession",
-      expect.objectContaining({
-        method: "POST"
-      })
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          identifier: "alice.bsky.social",
+          password: "app-password"
+        })
+      }
     );
   });
 
@@ -58,8 +65,186 @@ describe("createPublisher", () => {
       password: "bad-password"
     });
 
-    await expect(publisher.createSession()).rejects.toThrow(
+    await expect(publisher.startSession()).rejects.toThrow(
       "Failed to create session: Unauthorized"
+    );
+  });
+
+  it("throws when creating or updating publication before session starts", async () => {
+    vi.stubGlobal("fetch", vi.fn());
+
+    const publisher = createPublisher({
+      pds: "https://bsky.social",
+      identifier: "did:plc:abc123",
+      password: "app-password"
+    });
+
+    await expect(
+      publisher.createOrUpdatePublicationRecord({
+        $type: "site.standard.publication",
+        url: "https://example.com",
+        name: "Example",
+        description: "Example description",
+        preferences: {
+          showInDiscover: true
+        }
+      })
+    ).rejects.toThrow("Session not started. Call startSession() before making requests.");
+  });
+
+  it("creates a publication record when no matching record exists", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ cursor: null, records: [] }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            uri: "at://did:plc:abc123/site.standard.publication/new-record-key",
+            cid: "cid-1",
+            commit: {
+              cid: "commit-cid-1",
+              rev: "rev-1"
+            },
+            validationStatus: "valid"
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        )
+      );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const publisher = createPublisher({
+      pds: "https://bsky.social",
+      identifier: "did:plc:abc123",
+      password: "app-password"
+    });
+
+    await publisher.startSession();
+
+    const uri = await publisher.createOrUpdatePublicationRecord({
+      $type: "site.standard.publication",
+      url: "https://example.com",
+      name: "Example",
+      description: "Example description",
+      preferences: {
+        showInDiscover: true
+      }
+    });
+
+    expect(uri).toBe("at://did:plc:abc123/site.standard.publication/new-record-key");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "https://bsky.social/xrpc/com.atproto.repo.createRecord",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("updates a publication record when matching url already exists", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            cursor: null,
+            records: [
+              {
+                cid: "existing-cid",
+                uri: "at://did:plc:abc123/site.standard.publication/existing-record-key",
+                value: {
+                  $type: "site.standard.publication",
+                  url: "https://example.com",
+                  name: "Existing",
+                  description: "Existing description",
+                  preferences: {
+                    showInDiscover: true
+                  }
+                }
+              }
+            ]
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            uri: "at://did:plc:abc123/site.standard.publication/existing-record-key",
+            cid: "cid-2",
+            commit: {
+              cid: "commit-cid-2",
+              rev: "rev-2"
+            },
+            validationStatus: "valid"
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        )
+      );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const publisher = createPublisher({
+      pds: "https://bsky.social",
+      identifier: "did:plc:abc123",
+      password: "app-password"
+    });
+
+    await publisher.startSession();
+
+    const uri = await publisher.createOrUpdatePublicationRecord({
+      $type: "site.standard.publication",
+      url: "https://example.com",
+      name: "Updated",
+      description: "Updated description",
+      preferences: {
+        showInDiscover: false
+      }
+    });
+
+    expect(uri).toBe("at://did:plc:abc123/site.standard.publication/existing-record-key");
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "https://bsky.social/xrpc/com.atproto.repo.putRecord",
+      expect.objectContaining({ method: "POST" })
     );
   });
 });

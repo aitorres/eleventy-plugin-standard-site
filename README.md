@@ -19,12 +19,19 @@ import { pluginStandardSite } from "eleventy-plugin-standard-site";
 
 export default function (eleventyConfig) {
   eleventyConfig.addPlugin(pluginStandardSite, {
-    // You can use your DID or handle
+    // Publication details for your site
+    publicationName: "My Site",
+    publicationDescription: "A blog where I write about my life!",
+    publicationUrl: "https://example.com",
+    // You can use your ATProto DID or handle
     identifier: "did:plc:abc123",
     // Please use an app-password!
     password: "app-password-xyz",
+
+    // Optional: whether the publication should appear in discovery feeds, defaults to true
+    showInDiscover: true,
     // Optional: PDS URL, defaults to "https://bsky.social"
-    pds: "https://bsky.social"
+    pds: "https://bsky.social",
   });
 }
 ```
