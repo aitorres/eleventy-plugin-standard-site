@@ -43,6 +43,20 @@ describe("normalizePdsUrl", () => {
   it("handles combined normalization", () => {
     expect(normalizePdsUrl("  bsky.social/  ")).toBe("https://bsky.social");
   });
+
+  it("throws when URL is empty", () => {
+    expect(() => normalizePdsUrl("")).toThrow("PDS URL cannot be empty after normalization.");
+  });
+
+  it("throws when URL is whitespace only", () => {
+    expect(() => normalizePdsUrl("   ")).toThrow(
+      "PDS URL cannot be empty after normalization."
+    );
+  });
+
+  it("throws when URL becomes empty after removing trailing slash", () => {
+    expect(() => normalizePdsUrl("/")).toThrow("PDS URL cannot be empty after normalization.");
+  });
 });
 
 describe("normalizeIdentifier", () => {
@@ -60,5 +74,23 @@ describe("normalizeIdentifier", () => {
 
   it("trims whitespace", () => {
     expect(normalizeIdentifier("  @alice.bsky.social  ")).toBe("alice.bsky.social");
+  });
+
+  it("throws when identifier is empty", () => {
+    expect(() => normalizeIdentifier("")).toThrow(
+      "Identifier cannot be empty after normalization."
+    );
+  });
+
+  it("throws when identifier is whitespace only", () => {
+    expect(() => normalizeIdentifier("   ")).toThrow(
+      "Identifier cannot be empty after normalization."
+    );
+  });
+
+  it("throws when identifier is only @", () => {
+    expect(() => normalizeIdentifier("@")).toThrow(
+      "Identifier cannot be empty after normalization."
+    );
   });
 });
