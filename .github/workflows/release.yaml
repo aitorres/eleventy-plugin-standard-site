@@ -1,15 +1,62 @@
+name: Release new versions
+
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
+
+permissions:
+  contents: write
 
 jobs:
+  tag:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.version.outputs.changed }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Detect version change
+        id: version
+        shell: bash
+        run: |
+          current_version="$(jq -r '.version' package.json)"
+          previous_version="$(git show "${{ github.event.before }}:package.json" 2>/dev/null | jq -r '.version' 2>/dev/null || true)"
+
+          if [[ -z "$current_version" || "$current_version" == "null" || "$current_version" == "$previous_version" ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "tag=v${current_version}" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push tag
+        if: steps.version.outputs.changed == 'true'
+        shell: bash
+        run: |
+          tag="${{ steps.version.outputs.tag }}"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
+            echo "Tag ${tag} already exists."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$tag"
+          git push origin "$tag"
+
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
+    needs: tag
+    if: needs.tag.outputs.changed == 'true'
 
     permissions:
-      contents: read
+      contents: write
       id-token: write
 
     steps:
@@ -19,7 +66,71 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
+          tag_name: ${{ needs.tag.outputs.tag }}
+          name: ${{ needs.tag.outputs.tag }}
           draft: false
-          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+          prerelease: ${{ contains(needs.tag.outputs.tag, 'alpha') || contains(needs.tag.outputs.tag, 'beta') || contains(needs.tag.outputs.tag, 'rc') }}
+
+  publish:
+    runs-on: ubuntu-latest
+    needs:
+      - tag
+      - release
+    if: needs.tag.outputs.changed == 'true'
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Read package metadata
+        id: package
+        run: |
+          echo "name=$(node -p \"require('./package.json').name\")" >> "$GITHUB_OUTPUT"
+          echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+
+      - name: Check if version exists on npm
+        id: npm_version
+        run: |
+          if npm view "${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }}" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Version ${{ steps.package.outputs.version }} already exists for ${{ steps.package.outputs.name }}. Skipping publish."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Determine npm dist-tag
+        id: dist_tag
+        if: steps.npm_version.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.package.outputs.version }}"
+          if [[ "$VERSION" == *-* ]]; then
+            PRERELEASE="${VERSION#*-}"
+            CHANNEL="${PRERELEASE%%.*}"
+            CHANNEL="${CHANNEL,,}"
+            case "$CHANNEL" in
+              alpha|beta|rc)
+                TAG="$CHANNEL"
+                ;;
+              *)
+                TAG="latest"
+                ;;
+            esac
+          else
+            TAG="latest"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - run: npm publish --provenance --access public --tag "${{ steps.dist_tag.outputs.tag }}"
+        if: steps.npm_version.outputs.exists == 'false'
