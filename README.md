@@ -4,7 +4,7 @@
 
 ## Installation
 
-You can get the plugin from `npm`:
+This project supports Node.js 18 and later. You can install the plugin from `npm`:
 
 ```bash
 npm install eleventy-plugin-standard-site
@@ -32,6 +32,8 @@ export default function (eleventyConfig) {
 The plugin will get triggered on build time after Eleventy has generated the output files.
 
 ## Contributing
+
+To set up the development environment, clone the repository and install dependencies with `npm install`. Development environment requires Node.js 22 or later.
 
 Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
 
