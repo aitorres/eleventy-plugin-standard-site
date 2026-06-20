@@ -17,10 +17,7 @@
   "bugs": {
     "url": "https://github.com/aitorres/eleventy-plugin-standard-site/issues"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/aitorres/eleventy-plugin-standard-site.git"
-  },
+  "repository": "github:aitorres/eleventy-plugin-standard-site",
   "license": "MIT",
   "author": {
     "name": "Andrés Ignacio Torres",
