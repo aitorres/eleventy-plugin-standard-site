@@ -1,0 +1,38 @@
+{
+  "name": "eleventy-plugin-standard-site",
+  "version": "1.0.0",
+  "description": "11ty plugin to generate and publish Standard.Site records for your site.",
+  "keywords": [
+    "11ty",
+    "11ty-plugin",
+    "eleventy",
+    "eleventy-plugin",
+    "standard.site",
+    "atproto",
+    "lexicon",
+    "atprotocol",
+    "pds"
+  ],
+  "homepage": "https://github.com/aitorres/eleventy-plugin-standard-site#readme",
+  "bugs": {
+    "url": "https://github.com/aitorres/eleventy-plugin-standard-site/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aitorres/eleventy-plugin-standard-site.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Andrés Ignacio Torres",
+    "email": "dev@aitorres.com",
+    "url": "https://aitorres.com"
+  },
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@11ty/eleventy": "^2.0.0"
+  }
+}
