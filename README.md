@@ -15,16 +15,16 @@ npm install eleventy-plugin-standard-site
 Add the plugin to your Eleventy configuration file, e.g.:
 
 ```js
-import { standardSitePlugin } from "eleventy-plugin-standard-site";
+import { pluginStandardSite } from "eleventy-plugin-standard-site";
 
 export default function (eleventyConfig) {
-  eleventyConfig.addPlugin(standardSitePlugin, {
+  eleventyConfig.addPlugin(pluginStandardSite, {
     // You can use your DID or handle
     identifier: "did:plc:abc123",
     // Please use an app-password!
     password: "app-password-xyz",
     // Optional: PDS URL, defaults to "https://bsky.social"
-    pdsUrl: "https://bsky.social",
+    pds: "https://bsky.social",
   });
 }
 ```
