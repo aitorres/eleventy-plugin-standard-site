@@ -81,7 +81,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - tag
-      - release
     if: needs.tag.outputs.changed == 'true'
 
     permissions:
@@ -119,27 +118,20 @@ jobs:
       - run: npm run build
         if: steps.npm_version.outputs.exists == 'false'
 
-      - name: Determine npm dist-tag
-        id: dist_tag
+      - name: Publish to npm
         if: steps.npm_version.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.package.outputs.version }}"
+          TAG="latest"
           if [[ "$VERSION" == *-* ]]; then
-            PRERELEASE="${VERSION#*-}"
-            CHANNEL="${PRERELEASE%%.*}"
+            CHANNEL="${VERSION#*-}"
+            CHANNEL="${CHANNEL%%.*}"
             CHANNEL="${CHANNEL,,}"
             case "$CHANNEL" in
               alpha|beta|rc)
                 TAG="$CHANNEL"
                 ;;
-              *)
-                TAG="latest"
-                ;;
             esac
-          else
-            TAG="latest"
           fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
-      - run: npm publish --provenance --access public --tag "${{ steps.dist_tag.outputs.tag }}"
-        if: steps.npm_version.outputs.exists == 'false'
+          echo "Publishing ${VERSION} with npm dist-tag: ${TAG}"
+          npm publish --provenance --access public --tag "$TAG"
