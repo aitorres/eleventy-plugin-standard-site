@@ -39,13 +39,13 @@ export default function (eleventyConfig) {
     // Optional: PDS URL, defaults to "https://bsky.social"
     pds: "https://bsky.social",
     // Optional: path to an icon image file to be used in the publication record
-    iconPath: "./path/to/icon/image.jpg",
+    publicationIconPath: "./path/to/icon/image.jpg",
     // Optional: theme definition for the publication; if set, must include all colors
     themeColors: {
       bg: { r: 255, g: 255, b: 255 },
       fg: { r: 31, g: 41, b: 55 },
       accent: { r: 59, g: 130, b: 246 },
-      accentForeground: { r: 255, g: 255, b: 255 }
+      accentFg: { r: 255, g: 255, b: 255 }
     }
   });
 }

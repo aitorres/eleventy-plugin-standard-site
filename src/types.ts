@@ -83,6 +83,7 @@ export interface PublisherOptions {
 /** Slim response from the PDS session creation endpoint. */
 export interface SessionResponse {
   accessJwt: string;
+  did: string;
 }
 
 /** A generic record returned stored in a PDS. */

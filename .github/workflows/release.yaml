@@ -68,6 +68,15 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v7
 
+      - name: Extract changelog content for release
+        id: changelog_content
+        run: |
+          {
+            echo 'stdout<<EOF'
+            awk '/^## /{if (p) exit; p=1; next} p' CHANGELOG.md
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Create Release
         uses: softprops/action-gh-release@v3
         with:
@@ -75,6 +84,7 @@ jobs:
           name: ${{ needs.tag.outputs.tag }}
           draft: false
           prerelease: ${{ contains(needs.tag.outputs.tag, 'alpha') || contains(needs.tag.outputs.tag, 'beta') || contains(needs.tag.outputs.tag, 'rc') }}
+          body: ${{ steps.changelog_content.outputs.stdout }}
 
   publish:
     name: Publish to npm

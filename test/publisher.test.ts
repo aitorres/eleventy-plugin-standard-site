@@ -19,7 +19,7 @@ describe("createPublisher", () => {
 
   it("uses the default pds url when pds is not provided", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+      new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
         status: 200,
         headers: {
           "Content-Type": "application/json"
@@ -44,7 +44,7 @@ describe("createPublisher", () => {
 
   it("starts session and normalizes pds url and identifier", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+      new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
         status: 200,
         headers: {
           "Content-Type": "application/json"
@@ -72,6 +72,79 @@ describe("createPublisher", () => {
         password: "app-password"
       })
     });
+  });
+
+  it("uses the did from the session response as the identifier for subsequent requests", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:resolved789" }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ cursor: null, records: [] }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            uri: "at://did:plc:resolved789/site.standard.publication/new-record-key",
+            cid: "cid-1",
+            commit: {
+              cid: "commit-cid-1",
+              rev: "rev-1"
+            },
+            validationStatus: "valid"
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        )
+      );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const publisher = createPublisher({
+      pds: "https://bsky.social",
+      identifier: "@alice.bsky.social",
+      password: "app-password"
+    });
+
+    await publisher.startSession();
+
+    await publisher.createOrUpdatePublicationRecord({
+      $type: "site.standard.publication",
+      url: "https://example.com",
+      name: "Example",
+      preferences: {
+        showInDiscover: true
+      }
+    });
+
+    // Session creation still uses the originally provided handle
+    const createSessionCall = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(createSessionCall.body as string).identifier).toBe("alice.bsky.social");
+
+    // Subsequent requests use the did resolved from the session response
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://bsky.social/xrpc/com.atproto.repo.listRecords?collection=site.standard.publication&repo=did%3Aplc%3Aresolved789",
+      { method: "GET" }
+    );
+
+    const createRecordCall = fetchMock.mock.calls[2][1] as RequestInit;
+    expect(JSON.parse(createRecordCall.body as string).repo).toBe("did:plc:resolved789");
   });
 
   it("throws when session creation fails", async () => {
@@ -121,7 +194,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -189,7 +262,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -231,7 +304,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -359,7 +432,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -466,7 +539,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -531,7 +604,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -613,7 +686,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -694,7 +767,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -762,7 +835,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -842,7 +915,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -879,6 +952,12 @@ describe("createPublisher", () => {
             }
           }
         )
+      )
+      .mockResolvedValueOnce(
+        new Response("failed", {
+          status: 500,
+          statusText: "Internal Server Error"
+        })
       )
       .mockResolvedValueOnce(
         new Response("failed", {
@@ -931,9 +1010,13 @@ describe("createPublisher", () => {
     );
 
     expect(uri).toBe("at://did:plc:abc123/site.standard.publication/existing-record-key");
-    expect(consoleWarnSpy).toHaveBeenCalledWith(`Failed to process blob from ${iconPath}:`, expect.any(Error));
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      `\tFailed to compare against existing blob, re-uploading from ${iconPath}:`,
+      expect.any(Error)
+    );
+    expect(consoleWarnSpy).toHaveBeenCalledWith(`\tFailed to process blob from ${iconPath}:`, expect.any(Error));
 
-    const putRecordCall = fetchMock.mock.calls[3][1] as RequestInit;
+    const putRecordCall = fetchMock.mock.calls[4][1] as RequestInit;
     const putRecordBody = JSON.parse(putRecordCall.body as string);
     expect(putRecordBody.record.icon).toBeUndefined();
 
@@ -950,7 +1033,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -1064,7 +1147,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -1189,7 +1272,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -1255,7 +1338,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -1333,7 +1416,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -1371,6 +1454,12 @@ describe("createPublisher", () => {
             }
           }
         )
+      )
+      .mockResolvedValueOnce(
+        new Response("failed", {
+          status: 500,
+          statusText: "Internal Server Error"
+        })
       )
       .mockResolvedValueOnce(
         new Response("failed", {
@@ -1421,9 +1510,13 @@ describe("createPublisher", () => {
     );
 
     expect(uri).toBe("at://did:plc:abc123/site.standard.document/existing-doc-key");
-    expect(consoleWarnSpy).toHaveBeenCalledWith(`Failed to process blob from ${coverImagePath}:`, expect.any(Error));
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      `\tFailed to compare against existing blob, re-uploading from ${coverImagePath}:`,
+      expect.any(Error)
+    );
+    expect(consoleWarnSpy).toHaveBeenCalledWith(`\tFailed to process blob from ${coverImagePath}:`, expect.any(Error));
 
-    const putRecordCall = fetchMock.mock.calls[3][1] as RequestInit;
+    const putRecordCall = fetchMock.mock.calls[4][1] as RequestInit;
     const putRecordBody = JSON.parse(putRecordCall.body as string);
     expect(putRecordBody.record.coverImage).toBeUndefined();
 
@@ -1440,7 +1533,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"
@@ -1553,7 +1646,7 @@ describe("createPublisher", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
           status: 200,
           headers: {
             "Content-Type": "application/json"

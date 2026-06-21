@@ -33,7 +33,7 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
   }
 
   const normalizedPds = normalizePdsUrl(pds);
-  const normalizedIdentifier = normalizeIdentifier(identifier);
+  let normalizedIdentifier = normalizeIdentifier(identifier);
   const getEndpointUrl = (endpoint: string) => `${normalizedPds}${endpoint}`;
 
   let accessJwt: string | null = null;
@@ -109,15 +109,19 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
 
     try {
       if (existingBlob) {
-        const shouldReuseExistingBlob = await isSameFileAsExistingBlob(filePath, existingBlob);
-        if (shouldReuseExistingBlob) {
-          return existingBlob;
+        try {
+          const shouldReuseExistingBlob = await isSameFileAsExistingBlob(filePath, existingBlob);
+          if (shouldReuseExistingBlob) {
+            return existingBlob;
+          }
+        } catch (error) {
+          console.warn(`\tFailed to compare against existing blob, re-uploading from ${filePath}:`, error);
         }
       }
 
       return await uploadBlob(filePath);
     } catch (error) {
-      console.warn(`Failed to process blob from ${filePath}:`, error);
+      console.warn(`\tFailed to process blob from ${filePath}:`, error);
       return undefined;
     }
   };
@@ -292,6 +296,9 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
 
       const data = (await response.json()) as SessionResponse;
       accessJwt = data.accessJwt;
+
+      // once session is established, we use the response DID as identifier for all future requests
+      normalizedIdentifier = data.did;
     },
 
     createOrUpdatePublicationRecord: async (
