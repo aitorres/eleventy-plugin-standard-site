@@ -20,7 +20,7 @@ import {
 } from "./types";
 import { extractRecordKey, normalizePdsUrl, normalizeIdentifier } from "./utils";
 import { readFileSync, existsSync } from "fs";
-import { extname } from "path";
+import mime from "mime-types";
 
 export function createPublisher({ pds, identifier, password }: PublisherOptions): Publisher {
   if (!pds) {
@@ -42,24 +42,11 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
     }
   };
 
-  const getMimeType = (filePath: string): string => {
-    const ext = extname(filePath).toLowerCase();
-    const mimeTypeMap: { [key: string]: string } = {
-      ".jpg": "image/jpeg",
-      ".jpeg": "image/jpeg",
-      ".png": "image/png",
-      ".gif": "image/gif",
-      ".webp": "image/webp",
-      ".svg": "image/svg+xml"
-    };
-    return mimeTypeMap[ext] || "application/octet-stream";
-  };
-
   const uploadBlob = async (filePath: string): Promise<BlobRef> => {
     checkSession();
 
     const fileBuffer = readFileSync(filePath);
-    const mimeType = getMimeType(filePath);
+    const mimeType = mime.lookup(filePath) || "application/octet-stream";
 
     const response = await fetch(getEndpointUrl(ENDPOINTS.uploadBlob), {
       method: "POST",
