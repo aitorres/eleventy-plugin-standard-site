@@ -6,11 +6,9 @@ import {
   Document,
   DEFAULT_PDS_URL
 } from "./types";
+import { injectDocumentLinkTag, injectPublicationLinkTags } from "./link-tags";
 import path from "path";
 import fs from "fs";
-
-const STANDARD_SITE_DOCUMENT_REL = LEXICONS.document;
-const STANDARD_SITE_PUBLICATION_REL = LEXICONS.publication;
 
 const DEFAULT_OPTIONS: Partial<StandardSitePluginOptions> = {
   pds: DEFAULT_PDS_URL,
@@ -51,111 +49,6 @@ interface EleventyConfigLike {
     event: EleventyAfterEvent,
     callback: (data: EleventyAfterEventData) => Promise<void> | void
   ): void;
-}
-
-function getOutputHtmlPath(outputDir: string, postUrl: string): string {
-  const normalizedPostUrl = postUrl.replace(/^\/+/, "");
-
-  if (!normalizedPostUrl) {
-    return path.join(outputDir, "index.html");
-  }
-
-  if (normalizedPostUrl.endsWith("/")) {
-    return path.join(outputDir, normalizedPostUrl, "index.html");
-  }
-
-  if (path.extname(normalizedPostUrl)) {
-    return path.join(outputDir, normalizedPostUrl);
-  }
-
-  return path.join(outputDir, normalizedPostUrl, "index.html");
-}
-
-function getOutputHtmlPaths(outputDir: string): string[] {
-  const htmlPaths: string[] = [];
-  const directoriesToVisit = [outputDir];
-
-  while (directoriesToVisit.length > 0) {
-    const currentDirectory = directoriesToVisit.pop();
-    if (!currentDirectory) {
-      continue;
-    }
-
-    let entries: fs.Dirent[];
-    try {
-      entries = fs.readdirSync(currentDirectory, { withFileTypes: true });
-    } catch (error) {
-      console.warn(`Skipping publication link tag injection: failed reading directory ${currentDirectory}.`, error);
-      continue;
-    }
-
-    for (const entry of entries) {
-      const entryPath = path.join(currentDirectory, entry.name);
-
-      if (entry.isDirectory()) {
-        directoriesToVisit.push(entryPath);
-        continue;
-      }
-
-      if (entry.isFile() && path.extname(entry.name).toLowerCase() === ".html") {
-        htmlPaths.push(entryPath);
-      }
-    }
-  }
-
-  return htmlPaths;
-}
-
-function upsertLinkTagInHtmlFile(htmlPath: string, rel: string, href: string): void {
-  const linkTag = `<link rel="${rel}" href="${href}" />`;
-  const existingLinkPattern = new RegExp(
-    `<link\\b[^>]*\\brel=(?:"${rel}"|'${rel}')[^>]*>`,
-    "i"
-  );
-
-  let htmlContent: string;
-  try {
-    htmlContent = fs.readFileSync(htmlPath, "utf-8");
-  } catch (error) {
-    console.warn(`Skipping link tag injection for ${htmlPath}: failed reading file.`, error);
-    return;
-  }
-
-  let updatedHtmlContent = htmlContent;
-  if (existingLinkPattern.test(updatedHtmlContent)) {
-    updatedHtmlContent = updatedHtmlContent.replace(existingLinkPattern, linkTag);
-  } else if (/<\/head>/i.test(updatedHtmlContent)) {
-    updatedHtmlContent = updatedHtmlContent.replace(/<\/head>/i, `  ${linkTag}\n</head>`);
-  } else {
-    console.warn(`Skipping link tag injection for ${htmlPath}: file does not include a </head> tag.`);
-    return;
-  }
-
-  if (updatedHtmlContent === htmlContent) {
-    return;
-  }
-
-  try {
-    fs.writeFileSync(htmlPath, updatedHtmlContent, "utf-8");
-  } catch (error) {
-    console.warn(`Skipping link tag injection for ${htmlPath}: failed writing file.`, error);
-  }
-}
-
-function upsertStandardSiteDocumentLinkTag(
-  outputDir: string,
-  postUrl: string,
-  documentRecordUri: string
-): void {
-  const htmlPath = getOutputHtmlPath(outputDir, postUrl);
-  upsertLinkTagInHtmlFile(htmlPath, STANDARD_SITE_DOCUMENT_REL, documentRecordUri);
-}
-
-function upsertStandardSitePublicationLinkTag(outputDir: string, publicationRecordUri: string): void {
-  const htmlPaths = getOutputHtmlPaths(outputDir);
-  for (const htmlPath of htmlPaths) {
-    upsertLinkTagInHtmlFile(htmlPath, STANDARD_SITE_PUBLICATION_REL, publicationRecordUri);
-  }
 }
 
 export default function pluginStandardSite(
@@ -204,7 +97,7 @@ export default function pluginStandardSite(
 
     fs.mkdirSync(path.dirname(wellKnownEndpointPath), { recursive: true });
     fs.writeFileSync(wellKnownEndpointPath, publicationRecordUri, "utf-8");
-    upsertStandardSitePublicationLinkTag(outputDir, publicationRecordUri);
+    injectPublicationLinkTags(outputDir, publicationRecordUri);
 
     // Create or update document records for each post with standardSiteDocument: true
     for (const post of standardSiteDocumentPosts) {
@@ -220,7 +113,7 @@ export default function pluginStandardSite(
 
       try {
         const documentRecordUri = await publisher.createOrUpdateDocumentRecord(documentRecord);
-        upsertStandardSiteDocumentLinkTag(outputDir, post.url, documentRecordUri);
+        injectDocumentLinkTag(outputDir, post.url, documentRecordUri);
       } catch (error) {
         console.error(`Failed to sync document record for ${post.url}:`, error);
       }
