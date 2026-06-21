@@ -822,7 +822,7 @@ describe("createPublisher", () => {
     );
 
     expect(uri).toBe("at://did:plc:abc123/site.standard.publication/new-record-key");
-    expect(consoleWarnSpy).toHaveBeenCalledWith("Blob file not found: ./assets/nonexistent-logo.png");
+    expect(consoleWarnSpy).toHaveBeenCalledWith("\tBlob file not found: ./assets/nonexistent-logo.png");
 
     // Check that the record was created without an icon
     const createRecordCall = fetchMock.mock.calls[2][1] as RequestInit;
@@ -1313,7 +1313,7 @@ describe("createPublisher", () => {
     );
 
     expect(uri).toBe("at://did:plc:abc123/site.standard.document/new-doc-key");
-    expect(consoleWarnSpy).toHaveBeenCalledWith("Blob file not found: ./assets/nonexistent-cover.jpg");
+    expect(consoleWarnSpy).toHaveBeenCalledWith("\tBlob file not found: ./assets/nonexistent-cover.jpg");
 
     // Check that the record was created without a coverImage
     const createRecordCall = fetchMock.mock.calls[2][1] as RequestInit;

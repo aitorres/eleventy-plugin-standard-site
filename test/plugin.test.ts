@@ -348,7 +348,7 @@ describe("pluginStandardSite", () => {
     expect(mockPublisher.createOrUpdatePublicationRecord).toHaveBeenCalledWith(
       expect.any(Object),
       expect.objectContaining({
-        iconPath: "./assets/logo.png"
+        iconPath: "/tmp/output/assets/logo.png"
       })
     );
   });
@@ -392,7 +392,7 @@ describe("pluginStandardSite", () => {
     expect(mockPublisher.createOrUpdateDocumentRecord).toHaveBeenCalledWith(
       expect.any(Object),
       expect.objectContaining({
-        coverImagePath: "./assets/cover.jpg"
+        coverImagePath: "/tmp/output/assets/cover.jpg"
       })
     );
   });
