@@ -60,6 +60,9 @@ export default function pluginStandardSite(
   eleventyConfig.on("eleventy.after", async ({ dir }) => {
     const publisher = createPublisher(resolvedOptions);
 
+    const resolveAssetPath = (assetPath?: string): string | undefined =>
+      assetPath ? path.join(dir.output, assetPath) : undefined;
+
     // Authenticating to the PDS
     try {
       await publisher.startSession();
@@ -80,7 +83,7 @@ export default function pluginStandardSite(
     };
     const publicationRecordUri = await publisher.createOrUpdatePublicationRecord(publication, {
       themeColors: resolvedOptions.themeColors,
-      iconPath: resolvedOptions.publicationIconPath
+      iconPath: resolveAssetPath(resolvedOptions.publicationIconPath)
     });
 
     // Expose .well-known endpoint for the publication record
@@ -107,7 +110,7 @@ export default function pluginStandardSite(
 
       try {
         const documentRecordUri = await publisher.createOrUpdateDocumentRecord(documentRecord, {
-          coverImagePath: post.data.coverImagePath
+          coverImagePath: resolveAssetPath(post.data.coverImagePath)
         });
         injectDocumentLinkTag(outputDir, post.url, documentRecordUri);
       } catch (error) {

@@ -102,7 +102,7 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
     }
 
     if (!existsSync(filePath)) {
-      console.warn(`Blob file not found: ${filePath}`);
+      console.warn(`\tBlob file not found: ${filePath}`);
       return undefined;
     }
 
