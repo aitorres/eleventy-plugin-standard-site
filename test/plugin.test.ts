@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import pluginStandardSite from "../src/plugin";
 import * as publisherModule from "../src/publisher";
+import fs from "fs";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -80,6 +81,11 @@ describe("pluginStandardSite", () => {
   it("syncs all document posts", async () => {
     const config = makeEleventyConfig();
     vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+    const readFileSyncSpy = vi
+      .spyOn(fs, "readFileSync")
+      .mockReturnValue("<html><head></head><body>content</body></html>");
 
     const mockPublisher = {
       startSession: vi.fn().mockResolvedValue(undefined),
@@ -112,6 +118,105 @@ describe("pluginStandardSite", () => {
     expect(mockPublisher.createOrUpdateDocumentRecord).toHaveBeenCalledTimes(1);
     expect(mockPublisher.createOrUpdateDocumentRecord).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Hello", path: "/posts/hello/" })
+    );
+    expect(readFileSyncSpy).toHaveBeenCalledWith("/tmp/output/posts/hello/index.html", "utf-8");
+
+    const writeFileSyncSpy = vi.mocked(fs.writeFileSync);
+    const htmlWriteCall = writeFileSyncSpy.mock.calls.find(
+      ([filePath]) => filePath === "/tmp/output/posts/hello/index.html"
+    );
+    expect(htmlWriteCall).toBeDefined();
+    expect(htmlWriteCall?.[1]).toContain('rel="site.standard.document"');
+    expect(htmlWriteCall?.[1]).toContain(
+      'href="at://did:plc:abc123/site.standard.document/doc-key"'
+    );
+  });
+
+  it("updates existing site.standard.document link tag href", async () => {
+    const config = makeEleventyConfig();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "readFileSync").mockReturnValue(
+      '<html><head><link rel="site.standard.document" href="at://old/value" /></head><body>content</body></html>'
+    );
+
+    const mockPublisher = {
+      startSession: vi.fn().mockResolvedValue(undefined),
+      createOrUpdatePublicationRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
+      createOrUpdateDocumentRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+    };
+    vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
+
+    const fakePost = {
+      url: "/posts/hello/",
+      date: new Date("2026-01-01T00:00:00.000Z"),
+      data: { title: "Hello", description: "World" }
+    };
+
+    pluginStandardSite(config, baseOptions);
+
+    const collectionCallback = config.addCollection.mock.calls[0][1];
+    collectionCallback({
+      getAll: () => [{ ...fakePost, data: { ...fakePost.data, standardSiteDocument: true } }]
+    });
+
+    const afterHandler = config._handlers["eleventy.after"];
+    await afterHandler({ dir: { output: "/tmp/output" } });
+
+    const writeFileSyncSpy = vi.mocked(fs.writeFileSync);
+    const htmlWriteCall = writeFileSyncSpy.mock.calls.find(
+      ([filePath]) => filePath === "/tmp/output/posts/hello/index.html"
+    );
+    expect(htmlWriteCall).toBeDefined();
+    expect(htmlWriteCall?.[1]).toContain(
+      'href="at://did:plc:abc123/site.standard.document/doc-key"'
+    );
+    expect(htmlWriteCall?.[1]).not.toContain('href="at://old/value"');
+  });
+
+  it("warns and continues when the generated html file has no head tag", async () => {
+    const config = makeEleventyConfig();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "readFileSync").mockReturnValue("<html><body>content</body></html>");
+
+    const mockPublisher = {
+      startSession: vi.fn().mockResolvedValue(undefined),
+      createOrUpdatePublicationRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
+      createOrUpdateDocumentRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+    };
+    vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
+
+    const fakePost = {
+      url: "/posts/hello/",
+      date: new Date("2026-01-01T00:00:00.000Z"),
+      data: { title: "Hello", description: "World" }
+    };
+
+    pluginStandardSite(config, baseOptions);
+
+    const collectionCallback = config.addCollection.mock.calls[0][1];
+    collectionCallback({
+      getAll: () => [{ ...fakePost, data: { ...fakePost.data, standardSiteDocument: true } }]
+    });
+
+    const afterHandler = config._handlers["eleventy.after"];
+    await afterHandler({ dir: { output: "/tmp/output" } });
+
+    expect(mockPublisher.createOrUpdateDocumentRecord).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Skipping link tag injection for /posts/hello/: /tmp/output/posts/hello/index.html does not include a </head> tag."
     );
   });
 
