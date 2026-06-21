@@ -1,6 +1,6 @@
 {
   "name": "eleventy-plugin-standard-site",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0-rc.3",
   "description": "11ty plugin to generate and publish Standard.Site records on your AT Protocol PDS for your site.",
   "keywords": [
     "11ty",
@@ -17,7 +17,10 @@
   "bugs": {
     "url": "https://github.com/aitorres/eleventy-plugin-standard-site/issues"
   },
-  "repository": "github:aitorres/eleventy-plugin-standard-site",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aitorres/eleventy-plugin-standard-site.git"
+  },
   "license": "MIT",
   "author": {
     "name": "Andrés Ignacio Torres",
@@ -61,6 +64,9 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.61.0",
     "vitest": "^4.1.8"
+  },
+  "peerDependencies": {
+    "@11ty/eleventy": ">=2.0.0"
   },
   "engines": {
     "node": ">=18"
