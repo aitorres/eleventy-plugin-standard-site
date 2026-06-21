@@ -10,6 +10,8 @@ This project supports Node.js 18 and later. You can install the plugin from `npm
 npm install eleventy-plugin-standard-site
 ```
 
+You can view package details on [npmjs.com](https://www.npmjs.com/package/eleventy-plugin-standard-site) or [npmx.dev](https://npmx.dev/package/eleventy-plugin-standard-site).
+
 ## Usage
 
 Add the plugin to your Eleventy configuration file, e.g.:
