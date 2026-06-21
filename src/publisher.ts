@@ -71,14 +71,8 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
   };
 
   const getPublicationRecords = async (): Promise<PublicationWithUri[]> => {
-    try {
-      const records = await listRecords(LEXICONS.publication);
-      return records.map((record) => ({ ...(record.value as Publication), uri: record.uri }));
-    } catch (err) {
-      console.error("Error fetching publication records:", err);
-    }
-
-    return [];
+    const records = await listRecords(LEXICONS.publication);
+    return records.map((record) => ({ ...(record.value as Publication), uri: record.uri }));
   };
 
   const createRecord = async (
@@ -108,16 +102,10 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
   };
 
   const getSiteDocumentRecords = async (site: string): Promise<DocumentWithUri[]> => {
-    try {
-      const records = await listRecords(LEXICONS.document);
-      return records
-        .filter((record) => (record.value as Document).site === site)
-        .map((record) => ({ ...(record.value as Document), uri: record.uri }));
-    } catch (err) {
-      console.error("Error fetching document records:", err);
-    }
-
-    return [];
+    const records = await listRecords(LEXICONS.document);
+    return records
+      .filter((record) => (record.value as Document).site === site)
+      .map((record) => ({ ...(record.value as Document), uri: record.uri }));
   };
 
   const putRecord = async (

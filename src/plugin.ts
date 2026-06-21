@@ -104,7 +104,11 @@ export default function pluginStandardSite(
         bskyPostRef: post.data.bskyPostRef
       };
 
-      await publisher.createOrUpdateDocumentRecord(documentRecord);
+      try {
+        await publisher.createOrUpdateDocumentRecord(documentRecord);
+      } catch (error) {
+        console.error(`Failed to sync document record for ${post.url}:`, error);
+      }
     }
 
     console.log(
