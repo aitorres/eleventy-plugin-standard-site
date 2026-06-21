@@ -83,6 +83,33 @@ describe("pluginStandardSite", () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
     vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
     vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "readdirSync")
+      .mockReturnValueOnce([
+        {
+          name: "posts",
+          isDirectory: () => true,
+          isFile: () => false
+        }
+      ] as fs.Dirent[])
+      .mockReturnValueOnce([
+        {
+          name: "hello",
+          isDirectory: () => true,
+          isFile: () => false
+        },
+        {
+          name: "about.html",
+          isDirectory: () => false,
+          isFile: () => true
+        }
+      ] as fs.Dirent[])
+      .mockReturnValueOnce([
+        {
+          name: "index.html",
+          isDirectory: () => false,
+          isFile: () => true
+        }
+      ] as fs.Dirent[]);
     const readFileSyncSpy = vi
       .spyOn(fs, "readFileSync")
       .mockReturnValue("<html><head></head><body>content</body></html>");
@@ -122,13 +149,22 @@ describe("pluginStandardSite", () => {
     expect(readFileSyncSpy).toHaveBeenCalledWith("/tmp/output/posts/hello/index.html", "utf-8");
 
     const writeFileSyncSpy = vi.mocked(fs.writeFileSync);
-    const htmlWriteCall = writeFileSyncSpy.mock.calls.find(
+    const htmlWriteCalls = writeFileSyncSpy.mock.calls.filter(
       ([filePath]) => filePath === "/tmp/output/posts/hello/index.html"
     );
+    const htmlWriteCall = htmlWriteCalls.at(-1);
     expect(htmlWriteCall).toBeDefined();
     expect(htmlWriteCall?.[1]).toContain('rel="site.standard.document"');
     expect(htmlWriteCall?.[1]).toContain(
       'href="at://did:plc:abc123/site.standard.document/doc-key"'
+    );
+
+    const aboutWriteCall = writeFileSyncSpy.mock.calls.find(
+      ([filePath]) => filePath === "/tmp/output/posts/about.html"
+    );
+    expect(aboutWriteCall?.[1]).toContain('rel="site.standard.publication"');
+    expect(aboutWriteCall?.[1]).toContain(
+      'href="at://did:plc:abc123/site.standard.publication/pub-key"'
     );
   });
 
@@ -137,6 +173,7 @@ describe("pluginStandardSite", () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
     vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
     vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "readdirSync").mockReturnValue([] as fs.Dirent[]);
     vi.spyOn(fs, "readFileSync").mockReturnValue(
       '<html><head><link rel="site.standard.document" href="at://old/value" /></head><body>content</body></html>'
     );
@@ -185,6 +222,7 @@ describe("pluginStandardSite", () => {
     const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
     vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "readdirSync").mockReturnValue([] as fs.Dirent[]);
     vi.spyOn(fs, "readFileSync").mockReturnValue("<html><body>content</body></html>");
 
     const mockPublisher = {
@@ -216,7 +254,7 @@ describe("pluginStandardSite", () => {
 
     expect(mockPublisher.createOrUpdateDocumentRecord).toHaveBeenCalledTimes(1);
     expect(consoleWarnSpy).toHaveBeenCalledWith(
-      "Skipping link tag injection for /posts/hello/: /tmp/output/posts/hello/index.html does not include a </head> tag."
+      "Skipping link tag injection for /tmp/output/posts/hello/index.html: file does not include a </head> tag."
     );
   });
 
@@ -224,6 +262,7 @@ describe("pluginStandardSite", () => {
     const config = makeEleventyConfig();
     vi.spyOn(console, "log").mockImplementation(() => {});
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(fs, "readdirSync").mockReturnValue([] as fs.Dirent[]);
 
     const mockPublisher = {
       startSession: vi.fn().mockResolvedValue(undefined),
