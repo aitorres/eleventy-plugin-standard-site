@@ -26,7 +26,7 @@ interface EleventyCollectionItemData {
   title: string;
   description?: string;
   bskyPostRef?: string;
-  standardSitedocument?: boolean;
+  standardSiteDocument?: boolean;
 }
 
 interface EleventyCollectionItem {
@@ -63,7 +63,7 @@ export default function pluginStandardSite(
   eleventyConfig.addCollection("standardSiteDocuments", (collection: EleventyCollectionApiLike) => {
     standardSiteDocumentPosts = collection
       .getAll()
-      .filter((item) => item.data.standardSitedocument === true);
+      .filter((item) => item.data.standardSiteDocument === true);
     return standardSiteDocumentPosts;
   });
 
@@ -98,7 +98,7 @@ export default function pluginStandardSite(
     fs.mkdirSync(path.dirname(wellKnownEndpointPath), { recursive: true });
     fs.writeFileSync(wellKnownEndpointPath, publicationRecordUri, "utf-8");
 
-    // Create or update document records for each post with standardSitedocument: true
+    // Create or update document records for each post with standardSiteDocument: true
     for (const post of standardSiteDocumentPosts) {
       console.log(`Processing post: ${post.url}`);
       const documentRecord: Document = {

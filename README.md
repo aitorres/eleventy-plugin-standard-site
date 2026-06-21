@@ -40,7 +40,7 @@ The plugin will get triggered on build time after Eleventy has generated the out
 
 - One `site.standard.publication` record will be created (or updated) for the site as a whole, containing the publication metadata you provided in the plugin options.
 - The `.well-known/site.standard.publication` endpoint will be created in your output directory, verifying the publication record's AT URI.
-- One `site.standard.document` record will be created (or updated) for each page whose front matter sets `standardSitedocument: true`, containing page metadata and a reference to the page URL.
+- One `site.standard.document` record will be created (or updated) for each page whose front matter sets `standardSiteDocument: true`, containing page metadata and a reference to the page URL.
 
 Metadata for documents will be taken from the page's front matter. The example below lists all supported fields:
 
@@ -50,7 +50,7 @@ Metadata for documents will be taken from the page's front matter. The example b
 title: "My First Post"
 description: "This is the description of my first post."
 date: 2026-06-20
-standardSitedocument: true
+standardSiteDocument: true
 
 # Optional
 bskyPostRef: "at://did:plc:abc123/app.bsky.feed.post/def456"

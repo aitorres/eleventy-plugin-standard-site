@@ -48,14 +48,14 @@ describe("pluginStandardSite", () => {
     );
   });
 
-  it("returns only posts with standardSitedocument set to true", () => {
+  it("returns only posts with standardSiteDocument set to true", () => {
     const config = makeEleventyConfig();
     const posts = [
       { url: "/posts/1/", date: new Date("2026-06-06T00:00:00.000Z"), data: { title: "One" } },
       {
         url: "/posts/2/",
         date: new Date("2026-06-07T00:00:00.000Z"),
-        data: { title: "Two", standardSitedocument: true }
+        data: { title: "Two", standardSiteDocument: true }
       }
     ];
 
@@ -65,7 +65,7 @@ describe("pluginStandardSite", () => {
     const result = collectionCallback({ getAll: () => posts });
 
     expect(result).toEqual([posts[1]]);
-    expect(result[0].data.standardSitedocument).toBe(true);
+    expect(result[0].data.standardSiteDocument).toBe(true);
     expect(result[0].url).toBe("/posts/2/");
   });
 
@@ -103,7 +103,7 @@ describe("pluginStandardSite", () => {
     // Simulate the collection being populated
     const collectionCallback = config.addCollection.mock.calls[0][1];
     collectionCallback({
-      getAll: () => [{ ...fakePost, data: { ...fakePost.data, standardSitedocument: true } }]
+      getAll: () => [{ ...fakePost, data: { ...fakePost.data, standardSiteDocument: true } }]
     });
 
     const afterHandler = config._handlers["eleventy.after"];
@@ -142,7 +142,7 @@ describe("pluginStandardSite", () => {
     const collectionCallback = config.addCollection.mock.calls[0][1];
     collectionCallback({
       getAll: () =>
-        posts.map((post) => ({ ...post, data: { ...post.data, standardSitedocument: true } }))
+        posts.map((post) => ({ ...post, data: { ...post.data, standardSiteDocument: true } }))
     });
 
     const afterHandler = config._handlers["eleventy.after"];
