@@ -181,7 +181,6 @@ export default function pluginStandardSite(
     // Authenticating to the PDS
     try {
       await publisher.startSession();
-      console.log("Successfully authenticated to PDS");
     } catch (error) {
       console.error("Failed to authenticate to PDS:", error);
       return;

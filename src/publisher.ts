@@ -171,8 +171,6 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
 
       let recordUri: string | undefined;
       if (existingRecord) {
-        console.log(`Existing publication record found for URL ${publication.url}, updating...`);
-
         const existingRecordUri = existingRecord.uri;
         const existingRecordKey = extractRecordKey(existingRecordUri);
 
@@ -183,10 +181,6 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
         );
         recordUri = updateRecordResponse.uri;
       } else {
-        console.log(
-          `No existing publication record found for URL ${publication.url}, creating new record...`
-        );
-
         const newRecordResponse = await createRecord(LEXICONS.publication, publication);
         recordUri = newRecordResponse.uri;
       }
@@ -208,8 +202,6 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
 
       let recordUri: string | undefined;
       if (existingRecord) {
-        console.log(`Existing document record found for path ${document.path}, updating...`);
-
         const existingRecordUri = existingRecord.uri;
         const existingRecordKey = extractRecordKey(existingRecordUri);
 
@@ -220,17 +212,13 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
         );
         recordUri = updateRecordResponse.uri;
       } else {
-        console.log(
-          `No existing document record found for path ${document.path}, creating new record...`
-        );
-
         const newRecordResponse = await createRecord(LEXICONS.document, document);
         recordUri = newRecordResponse.uri;
       }
 
       const recordKey = extractRecordKey(recordUri);
       console.log(
-        `Document record for path ${document.path} available at URI: ${recordUri} (record key: ${recordKey})`
+        `\tDocument record for path ${document.path} available at URI: ${recordUri} (record key: ${recordKey})`
       );
 
       return recordUri;
