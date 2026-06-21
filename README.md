@@ -15,7 +15,7 @@ npm install eleventy-plugin-standard-site
 Add the plugin to your Eleventy configuration file, e.g.:
 
 ```js
-import { pluginStandardSite } from "eleventy-plugin-standard-site";
+import pluginStandardSite from "eleventy-plugin-standard-site";
 
 export default function (eleventyConfig) {
   eleventyConfig.addPlugin(pluginStandardSite, {
