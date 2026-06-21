@@ -59,6 +59,8 @@ bskyPostRef: "at://did:plc:abc123/app.bsky.feed.post/def456"
 ---
 ```
 
+The `date` field is used as the `publishedAt` value for the document record. You can refer to [Eleventy documentation on content dates](https://www.11ty.dev/docs/dates/) for alternatives.
+
 ## Contributing
 
 To set up the development environment, clone the repository and install dependencies with `npm install`. Development environment requires Node.js 22 or later.
