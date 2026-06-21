@@ -121,7 +121,12 @@ describe("pluginStandardSite", () => {
 
     expect(mockPublisher.createOrUpdateDocumentRecord).toHaveBeenCalledTimes(1);
     expect(mockPublisher.createOrUpdateDocumentRecord).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Hello", path: "/posts/hello/" })
+      expect.objectContaining({
+        $type: "site.standard.document",
+        title: "Hello",
+        path: "/posts/hello/",
+        publishedAt: "2026-01-01T00:00:00.000Z"
+      })
     );
     expect(injectPublicationLinkTags).toHaveBeenCalledWith(
       "/tmp/output",
@@ -132,6 +137,111 @@ describe("pluginStandardSite", () => {
       "/posts/hello/",
       "at://did:plc:abc123/site.standard.document/doc-key"
     );
+  });
+
+  it("works without publicationDescription (optional field)", async () => {
+    const config = makeEleventyConfig();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+
+    const mockPublisher = {
+      startSession: vi.fn().mockResolvedValue(undefined),
+      createOrUpdatePublicationRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
+      createOrUpdateDocumentRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+    };
+    vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
+
+    const optionsWithoutDescription = { ...baseOptions, publicationDescription: undefined };
+    pluginStandardSite(config, optionsWithoutDescription);
+
+    const collectionCallback = config.addCollection.mock.calls[0][1];
+    collectionCallback({ getAll: () => [] });
+
+    const afterHandler = config._handlers["eleventy.after"];
+    await afterHandler({ dir: { output: "/tmp/output" } });
+
+    expect(mockPublisher.createOrUpdatePublicationRecord).toHaveBeenCalledWith(
+      expect.not.objectContaining({ description: expect.anything() })
+    );
+  });
+
+  it("derives textContent from templateContent by stripping HTML tags", async () => {
+    const config = makeEleventyConfig();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+
+    const mockPublisher = {
+      startSession: vi.fn().mockResolvedValue(undefined),
+      createOrUpdatePublicationRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
+      createOrUpdateDocumentRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+    };
+    vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
+
+    const fakePost = {
+      url: "/posts/hello/",
+      date: new Date("2026-01-01T00:00:00.000Z"),
+      templateContent: "<p>Hello <strong>world</strong>.</p>",
+      data: { title: "Hello", standardSiteDocument: true }
+    };
+
+    pluginStandardSite(config, baseOptions);
+
+    const collectionCallback = config.addCollection.mock.calls[0][1];
+    collectionCallback({ getAll: () => [fakePost] });
+
+    const afterHandler = config._handlers["eleventy.after"];
+    await afterHandler({ dir: { output: "/tmp/output" } });
+
+    expect(mockPublisher.createOrUpdateDocumentRecord).toHaveBeenCalledWith(
+      expect.objectContaining({ textContent: "Hello world." })
+    );
+  });
+
+  it("omits optional document fields when not present in front matter", async () => {
+    const config = makeEleventyConfig();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+
+    const mockPublisher = {
+      startSession: vi.fn().mockResolvedValue(undefined),
+      createOrUpdatePublicationRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
+      createOrUpdateDocumentRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+    };
+    vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
+
+    const fakePost = {
+      url: "/posts/hello/",
+      date: new Date("2026-01-01T00:00:00.000Z"),
+      data: { title: "Hello", standardSiteDocument: true }
+    };
+
+    pluginStandardSite(config, baseOptions);
+
+    const collectionCallback = config.addCollection.mock.calls[0][1];
+    collectionCallback({ getAll: () => [fakePost] });
+
+    const afterHandler = config._handlers["eleventy.after"];
+    await afterHandler({ dir: { output: "/tmp/output" } });
+
+    const calledWith = mockPublisher.createOrUpdateDocumentRecord.mock.calls[0][0];
+    expect(calledWith.description).toBeUndefined();
+    expect(calledWith.textContent).toBeUndefined();
+    expect(calledWith.bskyPostRef).toBeUndefined();
   });
 
   it("continues processing remaining posts when one document sync fails", async () => {

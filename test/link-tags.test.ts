@@ -50,7 +50,9 @@ describe("link-tags", () => {
     );
 
     const htmlWriteCall = writeFileSyncSpy.mock.calls[0];
-    expect(htmlWriteCall?.[1]).toContain('href="at://did:plc:abc123/site.standard.document/doc-key"');
+    expect(htmlWriteCall?.[1]).toContain(
+      'href="at://did:plc:abc123/site.standard.document/doc-key"'
+    );
     expect(htmlWriteCall?.[1]).not.toContain('href="at://old/value"');
   });
 

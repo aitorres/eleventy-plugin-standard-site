@@ -47,18 +47,20 @@ export interface Publication {
   $type: string;
   url: string;
   name: string;
-  description: string;
+  description?: string;
   preferences: {
     showInDiscover: boolean;
   };
 }
 
 export interface Document {
+  $type: string;
   site: string;
   title: string;
-  publishedAt: Date;
+  publishedAt: string;
   path?: string;
   description?: string;
+  textContent?: string;
   bskyPostRef?: string;
 }
 
@@ -78,7 +80,7 @@ export interface Publisher {
 
 export type StandardSitePluginOptions = Partial<PublisherOptions> & {
   publicationName: string;
-  publicationDescription: string;
+  publicationDescription?: string;
   publicationUrl: string;
   showInDiscover?: boolean;
 };

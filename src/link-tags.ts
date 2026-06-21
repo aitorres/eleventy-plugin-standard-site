@@ -79,7 +79,9 @@ function upsertLinkTagInHtmlFile(htmlPath: string, rel: string, href: string): v
   } else if (/<\/head>/i.test(updatedHtmlContent)) {
     updatedHtmlContent = updatedHtmlContent.replace(/<\/head>/i, `  ${linkTag}\n</head>`);
   } else {
-    console.warn(`Skipping link tag injection for ${htmlPath}: file does not include a </head> tag.`);
+    console.warn(
+      `Skipping link tag injection for ${htmlPath}: file does not include a </head> tag.`
+    );
     return;
   }
 
@@ -94,7 +96,11 @@ function upsertLinkTagInHtmlFile(htmlPath: string, rel: string, href: string): v
   }
 }
 
-export function injectDocumentLinkTag(outputDir: string, postUrl: string, documentRecordUri: string): void {
+export function injectDocumentLinkTag(
+  outputDir: string,
+  postUrl: string,
+  documentRecordUri: string
+): void {
   const htmlPath = getOutputHtmlPath(outputDir, postUrl);
   upsertLinkTagInHtmlFile(htmlPath, STANDARD_SITE_DOCUMENT_REL, documentRecordUri);
 }

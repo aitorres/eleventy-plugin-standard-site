@@ -21,13 +21,14 @@ export default function (eleventyConfig) {
   eleventyConfig.addPlugin(pluginStandardSite, {
     // Publication details for your site
     publicationName: "My Site",
-    publicationDescription: "A blog where I write about my life!",
     publicationUrl: "https://example.com",
     // You can use your ATProto DID or handle
     identifier: "did:plc:abc123",
     // Please use an app-password!
     password: "app-password-xyz",
 
+    // Optional: brief description of the publication
+    publicationDescription: "A blog where I write about my life!",
     // Optional: whether the publication should appear in discovery feeds, defaults to true
     showInDiscover: true,
     // Optional: PDS URL, defaults to "https://bsky.social"
@@ -50,16 +51,18 @@ Metadata for documents will be taken from the page's front matter. The example b
 ---
 # Required
 title: "My First Post"
-description: "This is the description of my first post."
 date: 2026-06-20
 standardSiteDocument: true
 
 # Optional
+description: "This is the description of my first post."
 bskyPostRef: "at://did:plc:abc123/app.bsky.feed.post/def456"
 ---
 ```
 
 The `date` field is used as the `publishedAt` value for the document record. You can refer to [Eleventy documentation on content dates](https://www.11ty.dev/docs/dates/) for alternatives.
+
+The `textContent` field of the document record is automatically derived from the page's rendered HTML output (with tags stripped).
 
 Additionally, after publishing, a generated document page will include the following two `link` tags (and any other HTML page will include the first one):
 

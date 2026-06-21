@@ -7,6 +7,7 @@ import {
   DEFAULT_PDS_URL
 } from "./types";
 import { injectDocumentLinkTag, injectPublicationLinkTags } from "./link-tags";
+import striptags from "striptags";
 import path from "path";
 import fs from "fs";
 
@@ -33,6 +34,7 @@ interface EleventyCollectionItemData {
 interface EleventyCollectionItem {
   url: string;
   date: Date;
+  templateContent?: string;
   data: EleventyCollectionItemData;
 }
 
@@ -103,12 +105,15 @@ export default function pluginStandardSite(
     for (const post of standardSiteDocumentPosts) {
       console.log(`Processing post: ${post.url}`);
       const documentRecord: Document = {
+        $type: LEXICONS.document,
         site: publicationRecordUri,
         title: post.data.title,
-        publishedAt: post.date,
+        publishedAt: post.date.toISOString(),
         path: post.url,
         description: post.data.description,
-        bskyPostRef: post.data.bskyPostRef
+        bskyPostRef: post.data.bskyPostRef,
+        textContent:
+          post.templateContent !== undefined ? striptags(post.templateContent) : undefined
       };
 
       try {
