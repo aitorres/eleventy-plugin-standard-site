@@ -22,6 +22,7 @@ import { extractRecordKey, normalizePdsUrl, normalizeIdentifier } from "./utils"
 import { readFileSync, existsSync } from "fs";
 import mime from "mime-types";
 
+/** Creates a {@link Publisher} that authenticates to the PDS and syncs records. */
 export function createPublisher({ pds, identifier, password }: PublisherOptions): Publisher {
   if (!pds) {
     pds = DEFAULT_PDS_URL;

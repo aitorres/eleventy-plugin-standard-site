@@ -91,11 +91,13 @@ function upsertLinkTagInHtmlFile(htmlPath: string, rel: string, href: string): v
   }
 }
 
+/** Injects the `site.standard.document` link tag into the given post's HTML output. */
 export function injectDocumentLinkTag(outputDir: string, postUrl: string, documentRecordUri: string): void {
   const htmlPath = getOutputHtmlPath(outputDir, postUrl);
   upsertLinkTagInHtmlFile(htmlPath, STANDARD_SITE_DOCUMENT_REL, documentRecordUri);
 }
 
+/** Injects the `site.standard.publication` link tag into every HTML file in the output. */
 export function injectPublicationLinkTags(outputDir: string, publicationRecordUri: string): void {
   const htmlPaths = getOutputHtmlPaths(outputDir);
   for (const htmlPath of htmlPaths) {

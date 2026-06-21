@@ -52,6 +52,10 @@ interface EleventyConfigLike {
   on(event: EleventyAfterEvent, callback: (data: EleventyAfterEventData) => Promise<void> | void): void;
 }
 
+/**
+ * Eleventy plugin that syncs the site publication and its documents to Standard.site records
+ * on an AT Protocol PDS and injects the corresponding `<link>` tags into the output.
+ */
 export default function pluginStandardSite(
   eleventyConfig: EleventyConfigLike,
   options: StandardSitePluginOptions
