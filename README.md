@@ -86,11 +86,15 @@ Additionally, after publishing, a generated document page will include the follo
 <link rel="site.standard.document" href="at://did:plc:yourDID/site.standard.document/rkey" />
 ```
 
+## Repo mirror
+
+This repository is automatically synced one-way from [GitHub (aitorres/eleventy-plugin-standard-site)](https://github.com/aitorres/eleventy-plugin-standard-site) to [tangled (andresitorresm.com/eleventy-plugin-standard-site)](https://tangled.org/andresitorresm.com/eleventy-plugin-standard-site).
+
 ## Contributing
 
 To set up the development environment, clone the repository and install dependencies with `npm install`. Development environment requires Node.js 22 or later.
 
-Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change. Issues and pull requests can be opened on the GitHub repository at [aitorres/eleventy-plugin-standard-site](https://github.com/aitorres/eleventy-plugin-standard-site).
 
 Please make sure to update tests as appropriate.
 

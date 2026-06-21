@@ -1,0 +1,65 @@
+name: Sync
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    name: Sync to tangled.sh repo
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    if: github.repository == 'aitorres/eleventy-plugin-standard-site'
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Sync to tangled.sh repo
+        env:
+          TANGLED_REPO_URL: ${{ secrets.TANGLED_REPO_URL }}
+          TANGLED_SSH_PRIVATE_KEY: ${{ secrets.TANGLED_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$TANGLED_REPO_URL" || -z "$TANGLED_SSH_PRIVATE_KEY" ]]; then
+            echo "Required secrets are missing"
+            exit 1
+          fi
+
+          case "$TANGLED_REPO_URL" in
+            git@*:* )
+              ssh_host="${TANGLED_REPO_URL#git@}"
+              ssh_host="${ssh_host%%:*}"
+              ;;
+            * )
+              echo "TANGLED_REPO_URL must be an SSH Git remote"
+              exit 1
+              ;;
+          esac
+
+          install -m 700 -d ~/.ssh
+          key_file=~/.ssh/id_tangled
+
+          if printf '%s' "$TANGLED_SSH_PRIVATE_KEY" | grep -q 'BEGIN .*PRIVATE KEY'; then
+            printf '%s\n' "$TANGLED_SSH_PRIVATE_KEY" | tr -d '\r' > "$key_file"
+          else
+            printf '%s' "$TANGLED_SSH_PRIVATE_KEY" | tr -d '\r\n\t ' | base64 --decode > "$key_file"
+          fi
+
+          chmod 600 "$key_file"
+          ssh-keygen -y -f "$key_file" > /dev/null
+
+          ssh-keyscan -H "$ssh_host" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+          git remote add tangled "$TANGLED_REPO_URL" 2>/dev/null || \
+          git remote set-url tangled "$TANGLED_REPO_URL"
+
+          GIT_SSH_COMMAND="ssh -i $key_file -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
+            git push tangled HEAD:refs/heads/main
