@@ -10,7 +10,32 @@ afterEach(() => {
 describe("createPublisher", () => {
   it("throws when required options are missing", () => {
     expect(() => createPublisher({})).toThrow(
-      "Missing required PDS configuration: pds, identifier, and password are all required."
+      "Missing required PDS configuration: identifier and password are required."
+    );
+  });
+
+  it("uses the default pds url when pds is not provided", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+    );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const publisher = createPublisher({
+      identifier: "did:plc:abc123",
+      password: "app-password"
+    });
+
+    await publisher.startSession();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://bsky.social/xrpc/com.atproto.server.createSession",
+      expect.objectContaining({ method: "POST" })
     );
   });
 
@@ -66,7 +91,7 @@ describe("createPublisher", () => {
     });
 
     await expect(publisher.startSession()).rejects.toThrow(
-      "Failed to create session: Unauthorized"
+      "Failed to create session on PDS https://bsky.social with provided credentials: Unauthorized"
     );
   });
 

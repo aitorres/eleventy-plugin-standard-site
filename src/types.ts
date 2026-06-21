@@ -1,3 +1,5 @@
+export const DEFAULT_PDS_URL = "https://bsky.social";
+
 export const ENDPOINTS = {
   createSession: "/xrpc/com.atproto.server.createSession",
   createRecord: "/xrpc/com.atproto.repo.createRecord",

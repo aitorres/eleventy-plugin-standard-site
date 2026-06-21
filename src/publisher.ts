@@ -10,15 +10,18 @@ import {
   PublicationWithUri,
   Publisher,
   Document,
-  DocumentWithUri
+  DocumentWithUri,
+  DEFAULT_PDS_URL
 } from "./types";
 import { extractRecordKey, normalizePdsUrl, normalizeIdentifier } from "./utils";
 
 export function createPublisher({ pds, identifier, password }: PublisherOptions): Publisher {
-  if (!pds || !identifier || !password) {
-    throw new Error(
-      "Missing required PDS configuration: pds, identifier, and password are all required."
-    );
+  if (!pds) {
+    pds = DEFAULT_PDS_URL;
+  }
+
+  if (!identifier || !password) {
+    throw new Error("Missing required PDS configuration: identifier and password are required.");
   }
 
   const normalizedPds = normalizePdsUrl(pds);
@@ -150,7 +153,9 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to create session: ${response.statusText}`);
+        throw new Error(
+          `Failed to create session on PDS ${pds} with provided credentials: ${response.statusText}`
+        );
       }
 
       const data = (await response.json()) as SessionResponse;
