@@ -1,9 +1,18 @@
 import { createPublisher } from "./publisher";
 import { LEXICONS, Publication, StandardSitePluginOptions, Document, DEFAULT_PDS_URL } from "./types";
 import { injectDocumentLinkTag, injectPublicationLinkTags } from "./link-tags";
-import striptags from "striptags";
+import { convert } from "html-to-text";
 import path from "path";
 import fs from "fs";
+
+const htmlToPlainText = (html: string): string =>
+  convert(html, {
+    wordwrap: false,
+    selectors: [
+      { selector: "a", options: { ignoreHref: true } },
+      { selector: "img", format: "skip" }
+    ]
+  });
 
 const DEFAULT_OPTIONS: Partial<StandardSitePluginOptions> = {
   pds: DEFAULT_PDS_URL,
@@ -105,7 +114,7 @@ export default function pluginStandardSite(
         path: post.url,
         description: post.data.description,
         bskyPostRef: post.data.bskyPostRef,
-        textContent: post.templateContent !== undefined ? striptags(post.templateContent) : undefined
+        textContent: post.templateContent !== undefined ? htmlToPlainText(post.templateContent) : undefined
       };
 
       try {

@@ -51,14 +51,14 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "mime-types": "^3.0.2",
-    "striptags": "^3.2.0"
+    "html-to-text": "^10.0.0",
+    "mime-types": "^3.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/html-to-text": "^9.0.4",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^25.9.3",
-    "@types/striptags": "^0.0.5",
     "eslint": "^10.5.0",
     "globals": "^17.6.0",
     "prettier": "^3.8.4",

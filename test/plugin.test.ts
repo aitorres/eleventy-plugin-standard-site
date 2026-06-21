@@ -197,6 +197,43 @@ describe("pluginStandardSite", () => {
     expect(documentRecord).toEqual(expect.objectContaining({ textContent: "Hello world." }));
   });
 
+  it("decodes HTML entities and normalizes whitespace when deriving textContent", async () => {
+    const config = makeEleventyConfig();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+
+    const mockPublisher = {
+      startSession: vi.fn().mockResolvedValue(undefined),
+      createOrUpdatePublicationRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
+      createOrUpdateDocumentRecord: vi.fn().mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+    };
+    vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
+
+    const fakePost = {
+      url: "/posts/hello/",
+      date: new Date("2026-01-01T00:00:00.000Z"),
+      templateContent:
+        "<p>A conference for &quot;decentralized social networks&quot;,\n      held\n      here in Vancouver.</p>\n<p>Second paragraph.</p>",
+      data: { title: "Hello", standardSiteDocument: true }
+    };
+
+    pluginStandardSite(config, baseOptions);
+
+    const collectionCallback = config.addCollection.mock.calls[0][1];
+    collectionCallback({ getAll: () => [fakePost] });
+
+    const afterHandler = config._handlers["eleventy.after"];
+    await afterHandler({ dir: { output: "/tmp/output" } });
+
+    const [documentRecord] = mockPublisher.createOrUpdateDocumentRecord.mock.calls[0];
+    expect(documentRecord.textContent).toBe(
+      'A conference for "decentralized social networks", held here in Vancouver.\n\nSecond paragraph.'
+    );
+  });
+
   it("omits optional document fields when not present in front matter", async () => {
     const config = makeEleventyConfig();
     vi.spyOn(console, "log").mockImplementation(() => {});
