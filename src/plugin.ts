@@ -29,6 +29,7 @@ interface EleventyCollectionItemData {
   description?: string;
   bskyPostRef?: string;
   standardSiteDocument?: boolean;
+  coverImagePath?: string;
 }
 
 interface EleventyCollectionItem {
@@ -91,7 +92,10 @@ export default function pluginStandardSite(
         showInDiscover: resolvedOptions.showInDiscover ?? DEFAULT_OPTIONS.showInDiscover!
       }
     };
-    const publicationRecordUri = await publisher.createOrUpdatePublicationRecord(publication);
+    const publicationRecordUri = await publisher.createOrUpdatePublicationRecord(publication, {
+      themeColors: resolvedOptions.themeColors,
+      iconPath: resolvedOptions.publicationIconPath
+    });
 
     // Expose .well-known endpoint for the publication record
     const outputDir = dir.output;
@@ -117,7 +121,9 @@ export default function pluginStandardSite(
       };
 
       try {
-        const documentRecordUri = await publisher.createOrUpdateDocumentRecord(documentRecord);
+        const documentRecordUri = await publisher.createOrUpdateDocumentRecord(documentRecord, {
+          coverImagePath: post.data.coverImagePath
+        });
         injectDocumentLinkTag(outputDir, post.url, documentRecordUri);
       } catch (error) {
         console.error(`Failed to sync document record for ${post.url}:`, error);
@@ -125,7 +131,7 @@ export default function pluginStandardSite(
     }
 
     console.log(
-      `Finished processing Standard.Site records with 1 publication and ${standardSiteDocumentPosts.length} documents.`
+      `Finished processing Standard.site records with 1 publication and ${standardSiteDocumentPosts.length} documents.`
     );
   });
 }

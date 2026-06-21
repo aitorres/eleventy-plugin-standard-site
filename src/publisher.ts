@@ -11,9 +11,16 @@ import {
   Publisher,
   Document,
   DocumentWithUri,
-  DEFAULT_PDS_URL
+  DEFAULT_PDS_URL,
+  BlobRef,
+  BasicTheme,
+  ColorConfig,
+  UploadBlobResponse,
+  RGBColor
 } from "./types";
 import { extractRecordKey, normalizePdsUrl, normalizeIdentifier } from "./utils";
+import { readFileSync, existsSync } from "fs";
+import { extname } from "path";
 
 export function createPublisher({ pds, identifier, password }: PublisherOptions): Publisher {
   if (!pds) {
@@ -33,6 +40,155 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
     if (!accessJwt) {
       throw new Error("Session not started. Call startSession() before making requests.");
     }
+  };
+
+  const getMimeType = (filePath: string): string => {
+    const ext = extname(filePath).toLowerCase();
+    const mimeTypeMap: { [key: string]: string } = {
+      ".jpg": "image/jpeg",
+      ".jpeg": "image/jpeg",
+      ".png": "image/png",
+      ".gif": "image/gif",
+      ".webp": "image/webp",
+      ".svg": "image/svg+xml"
+    };
+    return mimeTypeMap[ext] || "application/octet-stream";
+  };
+
+  const uploadBlob = async (filePath: string): Promise<BlobRef> => {
+    checkSession();
+
+    const fileBuffer = readFileSync(filePath);
+    const mimeType = getMimeType(filePath);
+
+    const response = await fetch(getEndpointUrl(ENDPOINTS.uploadBlob), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessJwt}`,
+        "Content-Type": mimeType
+      },
+      body: fileBuffer
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to upload blob: ${response.statusText}`);
+    }
+
+    const data = (await response.json()) as UploadBlobResponse;
+    return data.blob;
+  };
+
+  const getBlobBuffer = async (cid: string): Promise<Buffer> => {
+    const params = new URLSearchParams();
+    params.set("did", normalizedIdentifier);
+    params.set("cid", cid);
+
+    const url = new URL(getEndpointUrl(ENDPOINTS.getBlob));
+    url.search = params.toString();
+
+    const response = await fetch(url.toString(), {
+      method: "GET"
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch existing blob ${cid}: ${response.statusText}`);
+    }
+
+    const body = await response.arrayBuffer();
+    return Buffer.from(body);
+  };
+
+  const isSameFileAsExistingBlob = async (filePath: string, blob: BlobRef): Promise<boolean> => {
+    const localFileBuffer = readFileSync(filePath);
+    const existingBlobBuffer = await getBlobBuffer(blob.ref.$link);
+    return localFileBuffer.equals(existingBlobBuffer);
+  };
+
+  const resolveBlobFromPath = async (options: {
+    filePath?: string;
+    existingBlob?: BlobRef;
+  }): Promise<BlobRef | undefined> => {
+    const { filePath, existingBlob } = options;
+
+    if (!filePath) {
+      return undefined;
+    }
+
+    if (!existsSync(filePath)) {
+      console.warn(`Blob file not found: ${filePath}`);
+      return undefined;
+    }
+
+    try {
+      if (existingBlob) {
+        const shouldReuseExistingBlob = await isSameFileAsExistingBlob(filePath, existingBlob);
+        if (shouldReuseExistingBlob) {
+          return existingBlob;
+        }
+      }
+
+      return await uploadBlob(filePath);
+    } catch (error) {
+      console.warn(`Failed to process blob from ${filePath}:`, error);
+      return undefined;
+    }
+  };
+
+  const isValidRgbColor = (color: RGBColor): boolean => {
+    for (const channel of [color.r, color.g, color.b]) {
+      if (!Number.isInteger(channel) || channel < 0 || channel > 255) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const colorConfigToBasicTheme = (colors: ColorConfig): BasicTheme => {
+    if (!colors.bg || !colors.fg || !colors.accent || !colors.accentFg) {
+      throw new Error(
+        "Incomplete color configuration provided. All colors (bg, fg, accent, accentFg) are required if you want to create a basic theme."
+      );
+    }
+
+    if (
+      !isValidRgbColor(colors.bg) ||
+      !isValidRgbColor(colors.fg) ||
+      !isValidRgbColor(colors.accent) ||
+      !isValidRgbColor(colors.accentFg)
+    ) {
+      throw new Error(
+        "Invalid color configuration provided. RGB color values must be integers between 0 and 255."
+      );
+    }
+
+    return {
+      $type: LEXICONS.basicTheme,
+      background: {
+        $type: LEXICONS.rgbColor,
+        r: colors.bg.r,
+        g: colors.bg.g,
+        b: colors.bg.b
+      },
+      foreground: {
+        $type: LEXICONS.rgbColor,
+        r: colors.fg.r,
+        g: colors.fg.g,
+        b: colors.fg.b
+      },
+      accent: {
+        $type: LEXICONS.rgbColor,
+        r: colors.accent.r,
+        g: colors.accent.g,
+        b: colors.accent.b
+      },
+      accentForeground: {
+        $type: LEXICONS.rgbColor,
+        r: colors.accentFg.r,
+        g: colors.accentFg.g,
+        b: colors.accentFg.b
+      }
+    };
   };
 
   const listRecords = async (collection: string): Promise<Record[]> => {
@@ -162,12 +318,29 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
       accessJwt = data.accessJwt;
     },
 
-    createOrUpdatePublicationRecord: async (publication: Publication) => {
+    createOrUpdatePublicationRecord: async (
+      publication: Publication,
+      options?: { themeColors?: ColorConfig; iconPath?: string }
+    ) => {
       checkSession();
+
+      const publicationToPublish: Publication = { ...publication };
+
+      if (options?.themeColors) {
+        publicationToPublish.basicTheme = colorConfigToBasicTheme(options.themeColors);
+      }
 
       // Try getting existing record to determine if we need to create or update
       const existingRecords = await getPublicationRecords();
       const existingRecord = existingRecords.find((record) => record.url === publication.url);
+
+      const resolvedIconBlob = await resolveBlobFromPath({
+        filePath: options?.iconPath,
+        existingBlob: existingRecord?.icon
+      });
+      if (resolvedIconBlob) {
+        publicationToPublish.icon = resolvedIconBlob;
+      }
 
       let recordUri: string | undefined;
       if (existingRecord) {
@@ -177,11 +350,11 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
         const updateRecordResponse = await putRecord(
           LEXICONS.publication,
           existingRecordKey,
-          publication
+          publicationToPublish
         );
         recordUri = updateRecordResponse.uri;
       } else {
-        const newRecordResponse = await createRecord(LEXICONS.publication, publication);
+        const newRecordResponse = await createRecord(LEXICONS.publication, publicationToPublish);
         recordUri = newRecordResponse.uri;
       }
 
@@ -193,12 +366,25 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
       return recordUri;
     },
 
-    createOrUpdateDocumentRecord: async (document: Document): Promise<string> => {
+    createOrUpdateDocumentRecord: async (
+      document: Document,
+      options?: { coverImagePath?: string }
+    ): Promise<string> => {
       checkSession();
+
+      const documentToPublish: Document = { ...document };
 
       // Try getting existing record to determine if we need to create or update
       const existingRecords = await getSiteDocumentRecords(document.site);
       const existingRecord = existingRecords.find((record) => record.path === document.path);
+
+      const resolvedCoverImageBlob = await resolveBlobFromPath({
+        filePath: options?.coverImagePath,
+        existingBlob: existingRecord?.coverImage
+      });
+      if (resolvedCoverImageBlob) {
+        documentToPublish.coverImage = resolvedCoverImageBlob;
+      }
 
       let recordUri: string | undefined;
       if (existingRecord) {
@@ -208,11 +394,11 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
         const updateRecordResponse = await putRecord(
           LEXICONS.document,
           existingRecordKey,
-          document
+          documentToPublish
         );
         recordUri = updateRecordResponse.uri;
       } else {
-        const newRecordResponse = await createRecord(LEXICONS.document, document);
+        const newRecordResponse = await createRecord(LEXICONS.document, documentToPublish);
         recordUri = newRecordResponse.uri;
       }
 

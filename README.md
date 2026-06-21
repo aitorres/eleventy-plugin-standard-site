@@ -1,6 +1,6 @@
 # eleventy-plugin-standard-site
 
-[11ty](https://www.11ty.dev/) plugin to generate and publish [Standard.Site](https://standard.site/) records on your [AT Protocol](https://atproto.com/) PDS for your site.
+[11ty](https://www.11ty.dev/) plugin to generate and publish [Standard.site](https://standard.site/) records on your [AT Protocol](https://atproto.com/) PDS for your site.
 
 ## Installation
 
@@ -32,12 +32,21 @@ export default function (eleventyConfig) {
     // Optional: whether the publication should appear in discovery feeds, defaults to true
     showInDiscover: true,
     // Optional: PDS URL, defaults to "https://bsky.social"
-    pds: "https://bsky.social"
+    pds: "https://bsky.social",
+    // Optional: path to an icon image file to be used in the publication record
+    iconPath: "./path/to/icon/image.jpg",
+    // Optional: theme definition for the publication; if set, must include all colors
+    themeColors: {
+      bg: { r: 255, g: 255, b: 255 },
+      fg: { r: 31, g: 41, b: 55 },
+      accent: { r: 59, g: 130, b: 246 },
+      accentForeground: { r: 255, g: 255, b: 255 }
+    }
   });
 }
 ```
 
-The plugin will get triggered on build time after Eleventy has generated the output files, and will integrate your website with Standard.Site lexicons as follows:
+The plugin will get triggered on build time after Eleventy has generated the output files, and will integrate your website with Standard.site lexicons as follows:
 
 - One `site.standard.publication` record will be created (or updated) for the site as a whole, containing the publication metadata you provided in the plugin options.
 - The `.well-known/site.standard.publication` endpoint will be created in your output directory, verifying the publication record's AT URI.
@@ -57,6 +66,7 @@ standardSiteDocument: true
 # Optional
 description: "This is the description of my first post."
 bskyPostRef: "at://did:plc:abc123/app.bsky.feed.post/def456"
+coverImagePath: "./path/to/cover/image.jpg"
 ---
 ```
 

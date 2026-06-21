@@ -120,7 +120,8 @@ describe("pluginStandardSite", () => {
     await afterHandler({ dir: { output: "/tmp/output" } });
 
     expect(mockPublisher.createOrUpdateDocumentRecord).toHaveBeenCalledTimes(1);
-    expect(mockPublisher.createOrUpdateDocumentRecord).toHaveBeenCalledWith(
+    const [documentRecord] = mockPublisher.createOrUpdateDocumentRecord.mock.calls[0];
+    expect(documentRecord).toEqual(
       expect.objectContaining({
         $type: "site.standard.document",
         title: "Hello",
@@ -165,7 +166,8 @@ describe("pluginStandardSite", () => {
     const afterHandler = config._handlers["eleventy.after"];
     await afterHandler({ dir: { output: "/tmp/output" } });
 
-    expect(mockPublisher.createOrUpdatePublicationRecord).toHaveBeenCalledWith(
+    const [publicationRecord] = mockPublisher.createOrUpdatePublicationRecord.mock.calls[0];
+    expect(publicationRecord).toEqual(
       expect.not.objectContaining({ description: expect.anything() })
     );
   });
@@ -202,9 +204,8 @@ describe("pluginStandardSite", () => {
     const afterHandler = config._handlers["eleventy.after"];
     await afterHandler({ dir: { output: "/tmp/output" } });
 
-    expect(mockPublisher.createOrUpdateDocumentRecord).toHaveBeenCalledWith(
-      expect.objectContaining({ textContent: "Hello world." })
-    );
+    const [documentRecord] = mockPublisher.createOrUpdateDocumentRecord.mock.calls[0];
+    expect(documentRecord).toEqual(expect.objectContaining({ textContent: "Hello world." }));
   });
 
   it("omits optional document fields when not present in front matter", async () => {
@@ -289,6 +290,133 @@ describe("pluginStandardSite", () => {
       "/tmp/output",
       "/posts/ok/",
       "at://did:plc:abc123/site.standard.document/doc-key-2"
+    );
+  });
+
+  it("passes color configuration to publication record", async () => {
+    const config = makeEleventyConfig();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+
+    const mockPublisher = {
+      startSession: vi.fn().mockResolvedValue(undefined),
+      createOrUpdatePublicationRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
+      createOrUpdateDocumentRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+    };
+    vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
+
+    const optionsWithThemeColors = {
+      ...baseOptions,
+      themeColors: {
+        bg: { r: 255, g: 255, b: 255 },
+        fg: { r: 31, g: 41, b: 55 },
+        accent: { r: 59, g: 130, b: 246 },
+        accentFg: { r: 255, g: 255, b: 255 }
+      }
+    };
+
+    pluginStandardSite(config, optionsWithThemeColors);
+
+    const collectionCallback = config.addCollection.mock.calls[0][1];
+    collectionCallback({ getAll: () => [] });
+
+    const afterHandler = config._handlers["eleventy.after"];
+    await afterHandler({ dir: { output: "/tmp/output" } });
+
+    expect(mockPublisher.createOrUpdatePublicationRecord).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        themeColors: optionsWithThemeColors.themeColors
+      })
+    );
+  });
+
+  it("passes publication icon path to publisher", async () => {
+    const config = makeEleventyConfig();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+
+    const mockPublisher = {
+      startSession: vi.fn().mockResolvedValue(undefined),
+      createOrUpdatePublicationRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
+      createOrUpdateDocumentRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+    };
+    vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
+
+    const optionsWithIcon = {
+      ...baseOptions,
+      publicationIconPath: "./assets/logo.png"
+    };
+
+    pluginStandardSite(config, optionsWithIcon);
+
+    const collectionCallback = config.addCollection.mock.calls[0][1];
+    collectionCallback({ getAll: () => [] });
+
+    const afterHandler = config._handlers["eleventy.after"];
+    await afterHandler({ dir: { output: "/tmp/output" } });
+
+    expect(mockPublisher.createOrUpdatePublicationRecord).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        iconPath: "./assets/logo.png"
+      })
+    );
+  });
+
+  it("passes document coverImagePath from frontmatter to publisher", async () => {
+    const config = makeEleventyConfig();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+
+    const mockPublisher = {
+      startSession: vi.fn().mockResolvedValue(undefined),
+      createOrUpdatePublicationRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
+      createOrUpdateDocumentRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+    };
+    vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
+
+    const fakePost = {
+      url: "/posts/hello/",
+      date: new Date("2026-01-01T00:00:00.000Z"),
+      data: {
+        title: "Hello",
+        description: "World",
+        standardSiteDocument: true,
+        coverImagePath: "./assets/cover.jpg"
+      }
+    };
+
+    pluginStandardSite(config, baseOptions);
+
+    const collectionCallback = config.addCollection.mock.calls[0][1];
+    collectionCallback({
+      getAll: () => [fakePost]
+    });
+
+    const afterHandler = config._handlers["eleventy.after"];
+    await afterHandler({ dir: { output: "/tmp/output" } });
+
+    expect(mockPublisher.createOrUpdateDocumentRecord).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        coverImagePath: "./assets/cover.jpg"
+      })
     );
   });
 });
