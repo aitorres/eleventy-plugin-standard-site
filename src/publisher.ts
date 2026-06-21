@@ -36,6 +36,7 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
   };
 
   const listRecords = async (collection: string): Promise<Record[]> => {
+    checkSession();
     const baseEndpointUrl = getEndpointUrl(ENDPOINTS.listRecords);
 
     let cursor: string | undefined;
@@ -54,6 +55,7 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
       const response = await fetch(url.toString(), {
         method: "GET",
         headers: {
+          Authorization: `Bearer ${accessJwt}`,
           "Content-Type": "application/json"
         }
       });
