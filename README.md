@@ -31,12 +31,33 @@ export default function (eleventyConfig) {
     // Optional: whether the publication should appear in discovery feeds, defaults to true
     showInDiscover: true,
     // Optional: PDS URL, defaults to "https://bsky.social"
-    pds: "https://bsky.social"
+    pds: "https://bsky.social",
+    // Optional: Eleventy collection tag used to identify pages to publish, defaults to "standard-site-document"
+    standardSiteDocumentTag: "standard-site-document"
   });
 }
 ```
 
-The plugin will get triggered on build time after Eleventy has generated the output files.
+The plugin will get triggered on build time after Eleventy has generated the output files, and will integrate your website with Standard.Site lexicons as follows:
+
+- One `site.standard.publication` record will be created (or updated) for the site as a whole, containing the publication metadata you provided in the plugin options.
+- The `.well-known/site.standard.publication` endpoint will be created in your output directory, verifying the publication record's AT URI.
+- One `site.standard.document` record will be created (or updated) for each page tagged with the value of `standardSiteDocumentTag` (default: `"standard-site-document"`), containing page metadata and a reference to the page URL.
+
+Metadata for documents will be taken from the page's front matter. The example below lists all supported fields:
+
+```yaml
+---
+title: "My First Post"
+description: "This is the description of my first post."
+date: 2026-06-20
+tags:
+  - standard-site-document
+
+# Optional
+bskyPostRef: "at://did:plc:abc123/app.bsky.feed.post/def456"
+---
+```
 
 ## Contributing
 
