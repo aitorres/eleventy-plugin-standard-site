@@ -5,8 +5,7 @@ import fs from "fs";
 
 const DEFAULT_OPTIONS: Partial<StandardSitePluginOptions> = {
   pds: "https://bsky.social",
-  showInDiscover: true,
-  standardSiteDocumentTag: "standard-site-document"
+  showInDiscover: true
 };
 
 type EleventyAfterEvent = "eleventy.after";
@@ -21,6 +20,7 @@ interface EleventyCollectionItemData {
   title: string;
   description?: string;
   bskyPostRef?: string;
+  standardSitedocument?: boolean;
 }
 
 interface EleventyCollectionItem {
@@ -30,7 +30,7 @@ interface EleventyCollectionItem {
 }
 
 interface EleventyCollectionApiLike {
-  getFilteredByTag(tag: string): EleventyCollectionItem[];
+  getAll(): EleventyCollectionItem[];
 }
 
 interface EleventyConfigLike {
@@ -53,11 +53,11 @@ export default function pluginStandardSite(
     ...options
   };
 
-  const documentTag =
-    resolvedOptions.standardSiteDocumentTag ?? DEFAULT_OPTIONS.standardSiteDocumentTag!;
   let standardSiteDocumentPosts: EleventyCollectionItem[] = [];
   eleventyConfig.addCollection("standardSiteDocuments", (collection: EleventyCollectionApiLike) => {
-    standardSiteDocumentPosts = collection.getFilteredByTag(documentTag);
+    standardSiteDocumentPosts = collection
+      .getAll()
+      .filter((item) => item.data.standardSitedocument === true);
     return standardSiteDocumentPosts;
   });
 
@@ -92,7 +92,7 @@ export default function pluginStandardSite(
     fs.mkdirSync(path.dirname(wellKnownEndpointPath), { recursive: true });
     fs.writeFileSync(wellKnownEndpointPath, publicationRecordUri, "utf-8");
 
-    // Create or update document records for each tagged post
+    // Create or update document records for each post with standardSitedocument: true
     for (const post of standardSiteDocumentPosts) {
       console.log(`Processing post: ${post.url}`);
       const documentRecord: Document = {

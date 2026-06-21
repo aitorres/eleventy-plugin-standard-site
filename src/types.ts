@@ -78,6 +78,5 @@ export type StandardSitePluginOptions = Partial<PublisherOptions> & {
   publicationName: string;
   publicationDescription: string;
   publicationUrl: string;
-  standardSiteDocumentTag?: string;
   showInDiscover?: boolean;
 };
