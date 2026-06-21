@@ -16,7 +16,8 @@ const htmlToPlainText = (html: string): string =>
 
 const DEFAULT_OPTIONS: Partial<StandardSitePluginOptions> = {
   pds: DEFAULT_PDS_URL,
-  showInDiscover: true
+  showInDiscover: true,
+  includeTextContent: true
 };
 
 type EleventyAfterEvent = "eleventy.after";
@@ -114,7 +115,10 @@ export default function pluginStandardSite(
         path: post.url,
         description: post.data.description,
         bskyPostRef: post.data.bskyPostRef,
-        textContent: post.templateContent !== undefined ? htmlToPlainText(post.templateContent) : undefined
+        textContent:
+          resolvedOptions.includeTextContent && post.templateContent !== undefined
+            ? htmlToPlainText(post.templateContent)
+            : undefined
       };
 
       try {

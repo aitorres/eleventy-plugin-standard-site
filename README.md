@@ -31,6 +31,9 @@ export default function (eleventyConfig) {
 
     // Optional: brief description of the publication
     publicationDescription: "A blog where I write about my life!",
+    // Optional: whether to automatically extract text content from posts
+    // and include in their document records, defaults to true
+    includeTextContent: true,
     // Optional: whether the publication should appear in discovery feeds, defaults to true
     showInDiscover: true,
     // Optional: PDS URL, defaults to "https://bsky.social"
@@ -74,7 +77,7 @@ coverImagePath: "./path/to/cover/image.jpg"
 
 The `date` field is used as the `publishedAt` value for the document record. You can refer to [Eleventy documentation on content dates](https://www.11ty.dev/docs/dates/) for alternatives.
 
-The `textContent` field of the document record is automatically derived from the page's rendered HTML output (with tags stripped).
+The `textContent` field of the document record is automatically derived from the page's rendered HTML output (with tags stripped), unless `includeTextContent` is set to `false` on the plugin config.
 
 Additionally, after publishing, a generated document page will include the following two `link` tags (and any other HTML page will include the first one):
 

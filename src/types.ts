@@ -147,6 +147,7 @@ export type StandardSitePluginOptions = Partial<PublisherOptions> & {
   publicationDescription?: string;
   publicationUrl: string;
   showInDiscover?: boolean;
+  includeTextContent?: boolean;
   themeColors?: ColorConfig;
   publicationIconPath?: string;
 };
