@@ -342,13 +342,13 @@ describe("createPublisher", () => {
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
       "https://bsky.social/xrpc/com.atproto.repo.listRecords?collection=site.standard.publication&repo=did%3Aplc%3Aabc123",
-      expect.objectContaining({ method: "GET" })
+      { method: "GET" }
     );
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       3,
       "https://bsky.social/xrpc/com.atproto.repo.listRecords?collection=site.standard.publication&repo=did%3Aplc%3Aabc123&cursor=next-page-cursor",
-      expect.objectContaining({ method: "GET" })
+      { method: "GET" }
     );
 
     expect(fetchMock).toHaveBeenNthCalledWith(
