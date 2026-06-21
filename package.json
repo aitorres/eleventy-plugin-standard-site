@@ -1,6 +1,6 @@
 {
   "name": "eleventy-plugin-standard-site",
-  "version": "1.0.0-rc.11",
+  "version": "1.0.0-rc.12",
   "description": "11ty plugin to generate and publish Standard.site records on your AT Protocol PDS for your site.",
   "keywords": [
     "11ty",
