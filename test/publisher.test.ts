@@ -227,6 +227,134 @@ describe("createPublisher", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it("lists all paginated publication records and stops when cursor is missing", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ accessJwt: "jwt-123" }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            cursor: "next-page-cursor",
+            records: [
+              {
+                cid: "existing-cid-1",
+                uri: "at://did:plc:abc123/site.standard.publication/record-key-1",
+                value: {
+                  $type: "site.standard.publication",
+                  url: "https://example.com",
+                  name: "Existing 1",
+                  description: "Existing description 1",
+                  preferences: {
+                    showInDiscover: true
+                  }
+                }
+              }
+            ]
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            records: [
+              {
+                cid: "existing-cid-2",
+                uri: "at://did:plc:abc123/site.standard.publication/record-key-2",
+                value: {
+                  $type: "site.standard.publication",
+                  url: "https://example.org",
+                  name: "Existing 2",
+                  description: "Existing description 2",
+                  preferences: {
+                    showInDiscover: false
+                  }
+                }
+              }
+            ]
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            uri: "at://did:plc:abc123/site.standard.publication/record-key-1",
+            cid: "cid-2",
+            commit: {
+              cid: "commit-cid-2",
+              rev: "rev-2"
+            },
+            validationStatus: "valid"
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json"
+            }
+          }
+        )
+      );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const publisher = createPublisher({
+      pds: "https://bsky.social",
+      identifier: "did:plc:abc123",
+      password: "app-password"
+    });
+
+    await publisher.startSession();
+
+    const uri = await publisher.createOrUpdatePublicationRecord({
+      $type: "site.standard.publication",
+      url: "https://example.com",
+      name: "Updated",
+      description: "Updated description",
+      preferences: {
+        showInDiscover: false
+      }
+    });
+
+    expect(uri).toBe("at://did:plc:abc123/site.standard.publication/record-key-1");
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://bsky.social/xrpc/com.atproto.repo.listRecords?collection=site.standard.publication&repo=did%3Aplc%3Aabc123",
+      expect.objectContaining({ method: "GET" })
+    );
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "https://bsky.social/xrpc/com.atproto.repo.listRecords?collection=site.standard.publication&repo=did%3Aplc%3Aabc123&cursor=next-page-cursor",
+      expect.objectContaining({ method: "GET" })
+    );
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      "https://bsky.social/xrpc/com.atproto.repo.putRecord",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
   it("updates a publication record when matching url already exists", async () => {
     const fetchMock = vi
       .fn()

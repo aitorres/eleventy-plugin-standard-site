@@ -67,9 +67,7 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
       const data = (await response.json()) as ListRecordsResponse;
       records.push(...data.records);
 
-      if (data.cursor) {
-        cursor = data.cursor;
-      }
+      cursor = data.cursor ?? undefined;
     } while (cursor);
 
     return records;
