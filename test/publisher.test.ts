@@ -62,19 +62,16 @@ describe("createPublisher", () => {
 
     publisher.startSession();
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://bsky.social/xrpc/com.atproto.server.createSession",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          identifier: "alice.bsky.social",
-          password: "app-password"
-        })
-      }
-    );
+    expect(fetchMock).toHaveBeenCalledWith("https://bsky.social/xrpc/com.atproto.server.createSession", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        identifier: "alice.bsky.social",
+        password: "app-password"
+      })
+    });
   });
 
   it("throws when session creation fails", async () => {
@@ -825,9 +822,7 @@ describe("createPublisher", () => {
     );
 
     expect(uri).toBe("at://did:plc:abc123/site.standard.publication/new-record-key");
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      "Blob file not found: ./assets/nonexistent-logo.png"
-    );
+    expect(consoleWarnSpy).toHaveBeenCalledWith("Blob file not found: ./assets/nonexistent-logo.png");
 
     // Check that the record was created without an icon
     const createRecordCall = fetchMock.mock.calls[2][1] as RequestInit;
@@ -936,10 +931,7 @@ describe("createPublisher", () => {
     );
 
     expect(uri).toBe("at://did:plc:abc123/site.standard.publication/existing-record-key");
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      `Failed to process blob from ${iconPath}:`,
-      expect.any(Error)
-    );
+    expect(consoleWarnSpy).toHaveBeenCalledWith(`Failed to process blob from ${iconPath}:`, expect.any(Error));
 
     const putRecordCall = fetchMock.mock.calls[3][1] as RequestInit;
     const putRecordBody = JSON.parse(putRecordCall.body as string);
@@ -1321,9 +1313,7 @@ describe("createPublisher", () => {
     );
 
     expect(uri).toBe("at://did:plc:abc123/site.standard.document/new-doc-key");
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      "Blob file not found: ./assets/nonexistent-cover.jpg"
-    );
+    expect(consoleWarnSpy).toHaveBeenCalledWith("Blob file not found: ./assets/nonexistent-cover.jpg");
 
     // Check that the record was created without a coverImage
     const createRecordCall = fetchMock.mock.calls[2][1] as RequestInit;
@@ -1431,10 +1421,7 @@ describe("createPublisher", () => {
     );
 
     expect(uri).toBe("at://did:plc:abc123/site.standard.document/existing-doc-key");
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      `Failed to process blob from ${coverImagePath}:`,
-      expect.any(Error)
-    );
+    expect(consoleWarnSpy).toHaveBeenCalledWith(`Failed to process blob from ${coverImagePath}:`, expect.any(Error));
 
     const putRecordCall = fetchMock.mock.calls[3][1] as RequestInit;
     const putRecordBody = JSON.parse(putRecordCall.body as string);

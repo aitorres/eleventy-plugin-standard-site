@@ -1,11 +1,5 @@
 import { createPublisher } from "./publisher";
-import {
-  LEXICONS,
-  Publication,
-  StandardSitePluginOptions,
-  Document,
-  DEFAULT_PDS_URL
-} from "./types";
+import { LEXICONS, Publication, StandardSitePluginOptions, Document, DEFAULT_PDS_URL } from "./types";
 import { injectDocumentLinkTag, injectPublicationLinkTags } from "./link-tags";
 import striptags from "striptags";
 import path from "path";
@@ -44,14 +38,8 @@ interface EleventyCollectionApiLike {
 }
 
 interface EleventyConfigLike {
-  addCollection(
-    name: string,
-    callback: (collection: EleventyCollectionApiLike) => EleventyCollectionItem[]
-  ): void;
-  on(
-    event: EleventyAfterEvent,
-    callback: (data: EleventyAfterEventData) => Promise<void> | void
-  ): void;
+  addCollection(name: string, callback: (collection: EleventyCollectionApiLike) => EleventyCollectionItem[]): void;
+  on(event: EleventyAfterEvent, callback: (data: EleventyAfterEventData) => Promise<void> | void): void;
 }
 
 export default function pluginStandardSite(
@@ -65,9 +53,7 @@ export default function pluginStandardSite(
 
   let standardSiteDocumentPosts: EleventyCollectionItem[] = [];
   eleventyConfig.addCollection("standardSiteDocuments", (collection: EleventyCollectionApiLike) => {
-    standardSiteDocumentPosts = collection
-      .getAll()
-      .filter((item) => item.data.standardSiteDocument === true);
+    standardSiteDocumentPosts = collection.getAll().filter((item) => item.data.standardSiteDocument === true);
     return standardSiteDocumentPosts;
   });
 
@@ -116,8 +102,7 @@ export default function pluginStandardSite(
         path: post.url,
         description: post.data.description,
         bskyPostRef: post.data.bskyPostRef,
-        textContent:
-          post.templateContent !== undefined ? striptags(post.templateContent) : undefined
+        textContent: post.templateContent !== undefined ? striptags(post.templateContent) : undefined
       };
 
       try {

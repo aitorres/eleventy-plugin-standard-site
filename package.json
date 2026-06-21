@@ -17,10 +17,7 @@
   "bugs": {
     "url": "https://github.com/aitorres/eleventy-plugin-standard-site/issues"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/aitorres/eleventy-plugin-standard-site.git"
-  },
+  "repository": "https://github.com/aitorres/eleventy-plugin-standard-site",
   "license": "MIT",
   "author": {
     "name": "Andrés Ignacio Torres",
@@ -81,10 +78,12 @@
     "node": ">=18"
   },
   "prettier": {
+    "arrowParens": "always",
+    "bracketSpacing": true,
     "semi": true,
     "singleQuote": false,
     "trailingComma": "none",
-    "printWidth": 100,
+    "printWidth": 120,
     "tabWidth": 2,
     "useTabs": false
   }

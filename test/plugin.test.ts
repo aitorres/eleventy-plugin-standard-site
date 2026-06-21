@@ -50,10 +50,7 @@ describe("pluginStandardSite", () => {
 
     pluginStandardSite(config, baseOptions);
 
-    expect(config.addCollection).toHaveBeenCalledWith(
-      "standardSiteDocuments",
-      expect.any(Function)
-    );
+    expect(config.addCollection).toHaveBeenCalledWith("standardSiteDocuments", expect.any(Function));
   });
 
   it("returns only posts with standardSiteDocument set to true", () => {
@@ -96,9 +93,7 @@ describe("pluginStandardSite", () => {
       createOrUpdatePublicationRecord: vi
         .fn()
         .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
-      createOrUpdateDocumentRecord: vi
-        .fn()
-        .mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+      createOrUpdateDocumentRecord: vi.fn().mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
     };
     vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
 
@@ -151,9 +146,7 @@ describe("pluginStandardSite", () => {
       createOrUpdatePublicationRecord: vi
         .fn()
         .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
-      createOrUpdateDocumentRecord: vi
-        .fn()
-        .mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+      createOrUpdateDocumentRecord: vi.fn().mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
     };
     vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
 
@@ -167,9 +160,7 @@ describe("pluginStandardSite", () => {
     await afterHandler({ dir: { output: "/tmp/output" } });
 
     const [publicationRecord] = mockPublisher.createOrUpdatePublicationRecord.mock.calls[0];
-    expect(publicationRecord).toEqual(
-      expect.not.objectContaining({ description: expect.anything() })
-    );
+    expect(publicationRecord).toEqual(expect.not.objectContaining({ description: expect.anything() }));
   });
 
   it("derives textContent from templateContent by stripping HTML tags", async () => {
@@ -183,9 +174,7 @@ describe("pluginStandardSite", () => {
       createOrUpdatePublicationRecord: vi
         .fn()
         .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
-      createOrUpdateDocumentRecord: vi
-        .fn()
-        .mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+      createOrUpdateDocumentRecord: vi.fn().mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
     };
     vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
 
@@ -219,9 +208,7 @@ describe("pluginStandardSite", () => {
       createOrUpdatePublicationRecord: vi
         .fn()
         .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
-      createOrUpdateDocumentRecord: vi
-        .fn()
-        .mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+      createOrUpdateDocumentRecord: vi.fn().mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
     };
     vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
 
@@ -273,18 +260,14 @@ describe("pluginStandardSite", () => {
 
     const collectionCallback = config.addCollection.mock.calls[0][1];
     collectionCallback({
-      getAll: () =>
-        posts.map((post) => ({ ...post, data: { ...post.data, standardSiteDocument: true } }))
+      getAll: () => posts.map((post) => ({ ...post, data: { ...post.data, standardSiteDocument: true } }))
     });
 
     const afterHandler = config._handlers["eleventy.after"];
     await afterHandler({ dir: { output: "/tmp/output" } });
 
     expect(mockPublisher.createOrUpdateDocumentRecord).toHaveBeenCalledTimes(2);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Failed to sync document record for /posts/fail/:",
-      expect.any(Error)
-    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith("Failed to sync document record for /posts/fail/:", expect.any(Error));
     expect(injectDocumentLinkTag).toHaveBeenCalledTimes(1);
     expect(injectDocumentLinkTag).toHaveBeenCalledWith(
       "/tmp/output",
@@ -304,9 +287,7 @@ describe("pluginStandardSite", () => {
       createOrUpdatePublicationRecord: vi
         .fn()
         .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
-      createOrUpdateDocumentRecord: vi
-        .fn()
-        .mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+      createOrUpdateDocumentRecord: vi.fn().mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
     };
     vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
 
@@ -347,9 +328,7 @@ describe("pluginStandardSite", () => {
       createOrUpdatePublicationRecord: vi
         .fn()
         .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
-      createOrUpdateDocumentRecord: vi
-        .fn()
-        .mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+      createOrUpdateDocumentRecord: vi.fn().mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
     };
     vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
 
@@ -385,9 +364,7 @@ describe("pluginStandardSite", () => {
       createOrUpdatePublicationRecord: vi
         .fn()
         .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
-      createOrUpdateDocumentRecord: vi
-        .fn()
-        .mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+      createOrUpdateDocumentRecord: vi.fn().mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
     };
     vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
 

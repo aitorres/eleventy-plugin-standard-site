@@ -144,9 +144,7 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
       !isValidRgbColor(colors.accent) ||
       !isValidRgbColor(colors.accentFg)
     ) {
-      throw new Error(
-        "Invalid color configuration provided. RGB color values must be integers between 0 and 255."
-      );
+      throw new Error("Invalid color configuration provided. RGB color values must be integers between 0 and 255.");
     }
 
     return {
@@ -216,10 +214,7 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
     return records.map((record) => ({ ...(record.value as Publication), uri: record.uri }));
   };
 
-  const createRecord = async (
-    collection: string,
-    value: object
-  ): Promise<CreateOrPutRecordResponse> => {
+  const createRecord = async (collection: string, value: object): Promise<CreateOrPutRecordResponse> => {
     checkSession();
 
     const response = await fetch(getEndpointUrl(ENDPOINTS.createRecord), {
@@ -291,9 +286,7 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
       });
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to create session on PDS ${pds} with provided credentials: ${response.statusText}`
-        );
+        throw new Error(`Failed to create session on PDS ${pds} with provided credentials: ${response.statusText}`);
       }
 
       const data = (await response.json()) as SessionResponse;
@@ -329,11 +322,7 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
         const existingRecordUri = existingRecord.uri;
         const existingRecordKey = extractRecordKey(existingRecordUri);
 
-        const updateRecordResponse = await putRecord(
-          LEXICONS.publication,
-          existingRecordKey,
-          publicationToPublish
-        );
+        const updateRecordResponse = await putRecord(LEXICONS.publication, existingRecordKey, publicationToPublish);
         recordUri = updateRecordResponse.uri;
       } else {
         const newRecordResponse = await createRecord(LEXICONS.publication, publicationToPublish);
@@ -373,11 +362,7 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
         const existingRecordUri = existingRecord.uri;
         const existingRecordKey = extractRecordKey(existingRecordUri);
 
-        const updateRecordResponse = await putRecord(
-          LEXICONS.document,
-          existingRecordKey,
-          documentToPublish
-        );
+        const updateRecordResponse = await putRecord(LEXICONS.document, existingRecordKey, documentToPublish);
         recordUri = updateRecordResponse.uri;
       } else {
         const newRecordResponse = await createRecord(LEXICONS.document, documentToPublish);

@@ -139,10 +139,7 @@ export interface Publisher {
     publication: Publication,
     options?: { themeColors?: ColorConfig; iconPath?: string }
   ) => Promise<string>;
-  createOrUpdateDocumentRecord: (
-    document: Document,
-    options?: { coverImagePath?: string }
-  ) => Promise<string>;
+  createOrUpdateDocumentRecord: (document: Document, options?: { coverImagePath?: string }) => Promise<string>;
 }
 
 export type StandardSitePluginOptions = Partial<PublisherOptions> & {

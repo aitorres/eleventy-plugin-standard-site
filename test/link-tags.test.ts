@@ -22,19 +22,13 @@ describe("link-tags", () => {
       .mockReturnValue("<html><head></head><body>content</body></html>");
     const writeFileSyncSpy = vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
 
-    injectDocumentLinkTag(
-      "/tmp/output",
-      "/posts/hello/",
-      "at://did:plc:abc123/site.standard.document/doc-key"
-    );
+    injectDocumentLinkTag("/tmp/output", "/posts/hello/", "at://did:plc:abc123/site.standard.document/doc-key");
 
     expect(readFileSyncSpy).toHaveBeenCalledWith("/tmp/output/posts/hello/index.html", "utf-8");
     const htmlWriteCall = writeFileSyncSpy.mock.calls[0];
     expect(htmlWriteCall?.[0]).toBe("/tmp/output/posts/hello/index.html");
     expect(htmlWriteCall?.[1]).toContain('rel="site.standard.document"');
-    expect(htmlWriteCall?.[1]).toContain(
-      'href="at://did:plc:abc123/site.standard.document/doc-key"'
-    );
+    expect(htmlWriteCall?.[1]).toContain('href="at://did:plc:abc123/site.standard.document/doc-key"');
   });
 
   it("updates an existing document link tag href", () => {
@@ -43,16 +37,10 @@ describe("link-tags", () => {
     );
     const writeFileSyncSpy = vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
 
-    injectDocumentLinkTag(
-      "/tmp/output",
-      "/posts/hello/",
-      "at://did:plc:abc123/site.standard.document/doc-key"
-    );
+    injectDocumentLinkTag("/tmp/output", "/posts/hello/", "at://did:plc:abc123/site.standard.document/doc-key");
 
     const htmlWriteCall = writeFileSyncSpy.mock.calls[0];
-    expect(htmlWriteCall?.[1]).toContain(
-      'href="at://did:plc:abc123/site.standard.document/doc-key"'
-    );
+    expect(htmlWriteCall?.[1]).toContain('href="at://did:plc:abc123/site.standard.document/doc-key"');
     expect(htmlWriteCall?.[1]).not.toContain('href="at://old/value"');
   });
 
@@ -61,11 +49,7 @@ describe("link-tags", () => {
     vi.spyOn(fs, "readFileSync").mockReturnValue("<html><body>content</body></html>");
     const writeFileSyncSpy = vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
 
-    injectDocumentLinkTag(
-      "/tmp/output",
-      "/posts/hello/",
-      "at://did:plc:abc123/site.standard.document/doc-key"
-    );
+    injectDocumentLinkTag("/tmp/output", "/posts/hello/", "at://did:plc:abc123/site.standard.document/doc-key");
 
     expect(writeFileSyncSpy).not.toHaveBeenCalled();
     expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -86,10 +70,7 @@ describe("link-tags", () => {
       .mockReturnValue("<html><head></head><body>content</body></html>");
     const writeFileSyncSpy = vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
 
-    injectPublicationLinkTags(
-      "/tmp/output",
-      "at://did:plc:abc123/site.standard.publication/pub-key"
-    );
+    injectPublicationLinkTags("/tmp/output", "at://did:plc:abc123/site.standard.publication/pub-key");
 
     expect(readFileSyncSpy).toHaveBeenCalledWith("/tmp/output/index.html", "utf-8");
     expect(readFileSyncSpy).toHaveBeenCalledWith("/tmp/output/posts/article.html", "utf-8");
@@ -97,9 +78,7 @@ describe("link-tags", () => {
     const writeContents = writeFileSyncSpy.mock.calls.map(([, content]) => String(content));
     expect(writeContents).toHaveLength(2);
     expect(writeContents[0]).toContain('rel="site.standard.publication"');
-    expect(writeContents[0]).toContain(
-      'href="at://did:plc:abc123/site.standard.publication/pub-key"'
-    );
+    expect(writeContents[0]).toContain('href="at://did:plc:abc123/site.standard.publication/pub-key"');
     expect(writeContents[1]).toContain('rel="site.standard.publication"');
   });
 });

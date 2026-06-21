@@ -75,20 +75,14 @@ describe("normalizeIdentifier", () => {
   });
 
   it("throws when identifier is empty", () => {
-    expect(() => normalizeIdentifier("")).toThrow(
-      "Identifier cannot be empty after normalization."
-    );
+    expect(() => normalizeIdentifier("")).toThrow("Identifier cannot be empty after normalization.");
   });
 
   it("throws when identifier is whitespace only", () => {
-    expect(() => normalizeIdentifier("   ")).toThrow(
-      "Identifier cannot be empty after normalization."
-    );
+    expect(() => normalizeIdentifier("   ")).toThrow("Identifier cannot be empty after normalization.");
   });
 
   it("throws when identifier is only @", () => {
-    expect(() => normalizeIdentifier("@")).toThrow(
-      "Identifier cannot be empty after normalization."
-    );
+    expect(() => normalizeIdentifier("@")).toThrow("Identifier cannot be empty after normalization.");
   });
 });
