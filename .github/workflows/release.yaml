@@ -7,21 +7,23 @@ on:
     paths:
       - package.json
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   tag:
     name: Create Git Tag
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       changed: ${{ steps.version.outputs.changed }}
       tag: ${{ steps.version.outputs.tag }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Detect version change
         id: version
@@ -42,7 +44,7 @@ jobs:
         if: steps.version.outputs.changed == 'true'
         shell: bash
         run: |
-          tag="${{ steps.version.outputs.tag }}"
+          tag="${STEPS_VERSION_OUTPUTS_TAG}"
 
           if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
             echo "Tag ${tag} already exists."
@@ -53,6 +55,8 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag "$tag"
           git push origin "$tag"
+        env:
+          STEPS_VERSION_OUTPUTS_TAG: ${{ steps.version.outputs.tag }}
 
   release:
     name: Create GitHub Release
@@ -66,7 +70,9 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Extract changelog content for release
         id: changelog_content
@@ -78,13 +84,16 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Create Release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ needs.tag.outputs.tag }}
-          name: ${{ needs.tag.outputs.tag }}
-          draft: false
-          prerelease: ${{ contains(needs.tag.outputs.tag, 'alpha') || contains(needs.tag.outputs.tag, 'beta') || contains(needs.tag.outputs.tag, 'rc') }}
-          body: ${{ steps.changelog_content.outputs.stdout }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.tag.outputs.tag }}
+          BODY: ${{ steps.changelog_content.outputs.stdout }}
+        run: |
+          prerelease=()
+          if [[ "$TAG" == *alpha* || "$TAG" == *beta* || "$TAG" == *rc* ]]; then
+            prerelease=(--prerelease)
+          fi
+          gh release create "$TAG" --title "$TAG" --notes "$BODY" "${prerelease[@]}"
 
   publish:
     name: Publish to npm
@@ -98,9 +107,11 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "24.x"
           registry-url: "https://registry.npmjs.org"
@@ -115,12 +126,15 @@ jobs:
       - name: Check if version exists on npm
         id: npm_version
         run: |
-          if npm view "${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }}" version >/dev/null 2>&1; then
+          if npm view "${STEPS_PACKAGE_OUTPUTS_NAME}@${STEPS_PACKAGE_OUTPUTS_VERSION}" version >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Version ${{ steps.package.outputs.version }} already exists for ${{ steps.package.outputs.name }}. Skipping publish."
+            echo "Version ${STEPS_PACKAGE_OUTPUTS_VERSION} already exists for ${STEPS_PACKAGE_OUTPUTS_NAME}. Skipping publish."
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
+        env:
+          STEPS_PACKAGE_OUTPUTS_NAME: ${{ steps.package.outputs.name }}
+          STEPS_PACKAGE_OUTPUTS_VERSION: ${{ steps.package.outputs.version }}
 
       - run: npm ci
         if: steps.npm_version.outputs.exists == 'false'
@@ -131,7 +145,7 @@ jobs:
       - name: Publish to npm
         if: steps.npm_version.outputs.exists == 'false'
         run: |
-          VERSION="${{ steps.package.outputs.version }}"
+          VERSION="${STEPS_PACKAGE_OUTPUTS_VERSION}"
           TAG="latest"
           if [[ "$VERSION" == *-* ]]; then
             CHANNEL="${VERSION#*-}"
@@ -145,3 +159,5 @@ jobs:
           fi
           echo "Publishing ${VERSION} with npm dist-tag: ${TAG}"
           npm publish --provenance --access public --tag "$TAG"
+        env:
+          STEPS_PACKAGE_OUTPUTS_VERSION: ${{ steps.package.outputs.version }}
