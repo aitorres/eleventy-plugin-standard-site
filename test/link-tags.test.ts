@@ -63,8 +63,8 @@ describe("link-tags", () => {
         makeDirEntry("posts", "directory"),
         makeDirEntry("index.html", "file"),
         makeDirEntry("styles.css", "file")
-      ] as fs.Dirent[])
-      .mockReturnValueOnce([makeDirEntry("article.html", "file")] as fs.Dirent[]);
+      ] as unknown as fs.Dirent<NonSharedBuffer>[])
+      .mockReturnValueOnce([makeDirEntry("article.html", "file")] as unknown as fs.Dirent<NonSharedBuffer>[]);
     const readFileSyncSpy = vi
       .spyOn(fs, "readFileSync")
       .mockReturnValue("<html><head></head><body>content</body></html>");
@@ -75,7 +75,7 @@ describe("link-tags", () => {
     expect(readFileSyncSpy).toHaveBeenCalledWith("/tmp/output/index.html", "utf-8");
     expect(readFileSyncSpy).toHaveBeenCalledWith("/tmp/output/posts/article.html", "utf-8");
 
-    const writeContents = writeFileSyncSpy.mock.calls.map(([, content]) => String(content));
+    const writeContents = writeFileSyncSpy.mock.calls.map((call) => String(call[1] as string));
     expect(writeContents).toHaveLength(2);
     expect(writeContents[0]).toContain('rel="site.standard.publication"');
     expect(writeContents[0]).toContain('href="at://did:plc:abc123/site.standard.publication/pub-key"');

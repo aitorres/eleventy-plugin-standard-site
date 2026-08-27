@@ -60,7 +60,7 @@ describe("createPublisher", () => {
       password: "app-password"
     });
 
-    publisher.startSession();
+    void publisher.startSession();
 
     expect(fetchMock).toHaveBeenCalledWith("https://bsky.social/xrpc/com.atproto.server.createSession", {
       method: "POST",
@@ -527,9 +527,10 @@ describe("createPublisher", () => {
 
     await expect(
       publisher.createOrUpdateDocumentRecord({
+        $type: "site.standard.document",
         site: "at://did:plc:abc123/site.standard.publication/publication-key",
         title: "A post",
-        publishedAt: new Date("2026-01-01T00:00:00.000Z"),
+        publishedAt: "2026-01-01T00:00:00.000Z",
         path: "/posts/a-post/"
       })
     ).rejects.toThrow("Session not started. Call startSession() before making requests.");
@@ -585,9 +586,10 @@ describe("createPublisher", () => {
     await publisher.startSession();
 
     const uri = await publisher.createOrUpdateDocumentRecord({
+      $type: "site.standard.document",
       site: "at://did:plc:abc123/site.standard.publication/publication-key",
       title: "A post",
-      publishedAt: new Date("2026-01-01T00:00:00.000Z"),
+      publishedAt: "2026-01-01T00:00:00.000Z",
       path: "/posts/a-post/"
     });
 
@@ -667,9 +669,10 @@ describe("createPublisher", () => {
     await publisher.startSession();
 
     const uri = await publisher.createOrUpdateDocumentRecord({
+      $type: "site.standard.document",
       site: "at://did:plc:abc123/site.standard.publication/publication-key",
       title: "Updated post",
-      publishedAt: new Date("2026-01-02T00:00:00.000Z"),
+      publishedAt: "2026-01-02T00:00:00.000Z",
       path: "/posts/a-post/"
     });
 
@@ -1319,9 +1322,10 @@ describe("createPublisher", () => {
 
     const uri = await publisher.createOrUpdateDocumentRecord(
       {
+        $type: "site.standard.document",
         site: "at://did:plc:abc123/site.standard.publication/pub-key",
         title: "A post",
-        publishedAt: new Date("2026-01-01T00:00:00.000Z"),
+        publishedAt: "2026-01-01T00:00:00.000Z",
         path: "/posts/a-post/"
       },
       {
@@ -1385,9 +1389,10 @@ describe("createPublisher", () => {
 
     const uri = await publisher.createOrUpdateDocumentRecord(
       {
+        $type: "site.standard.document",
         site: "at://did:plc:abc123/site.standard.publication/pub-key",
         title: "A post",
-        publishedAt: new Date("2026-01-01T00:00:00.000Z"),
+        publishedAt: "2026-01-01T00:00:00.000Z",
         path: "/posts/a-post/"
       },
       {
@@ -1499,9 +1504,10 @@ describe("createPublisher", () => {
 
     const uri = await publisher.createOrUpdateDocumentRecord(
       {
+        $type: "site.standard.document",
         site: "at://did:plc:abc123/site.standard.publication/pub-key",
         title: "A post",
-        publishedAt: new Date("2026-01-01T00:00:00.000Z"),
+        publishedAt: "2026-01-01T00:00:00.000Z",
         path: "/posts/a-post/"
       },
       {
@@ -1612,9 +1618,10 @@ describe("createPublisher", () => {
 
     const uri = await publisher.createOrUpdateDocumentRecord(
       {
+        $type: "site.standard.document",
         site: "at://did:plc:abc123/site.standard.publication/pub-key",
         title: "A post",
-        publishedAt: new Date("2026-01-01T00:00:00.000Z"),
+        publishedAt: "2026-01-01T00:00:00.000Z",
         path: "/posts/a-post/"
       },
       {
@@ -1743,9 +1750,10 @@ describe("createPublisher", () => {
 
     const uri = await publisher.createOrUpdateDocumentRecord(
       {
+        $type: "site.standard.document",
         site: "at://did:plc:abc123/site.standard.publication/pub-key",
         title: "A post",
-        publishedAt: new Date("2026-01-01T00:00:00.000Z"),
+        publishedAt: "2026-01-01T00:00:00.000Z",
         path: "/posts/a-post/"
       },
       {
