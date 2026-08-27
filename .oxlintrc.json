@@ -3,6 +3,10 @@
   "plugins": [
     "typescript"
   ],
+  "options": {
+    "typeAware": true,
+    "typeCheck": true
+  },
   "env": {
     "builtin": true
   },
