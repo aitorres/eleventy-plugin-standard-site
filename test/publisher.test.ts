@@ -908,6 +908,67 @@ describe("createPublisher", () => {
     consoleWarnSpy.mockRestore();
   });
 
+  it("skips a publication icon larger than 1 MB", async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "stdsite-icon-too-large-"));
+    const iconPath = join(tempDir, "icon.png");
+    writeFileSync(iconPath, Buffer.alloc(1_000_001));
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ accessJwt: "jwt-123", did: "did:plc:abc123" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ cursor: null, records: [] }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            uri: "at://did:plc:abc123/site.standard.publication/new-record-key",
+            cid: "cid-1",
+            commit: { cid: "commit-cid-1", rev: "rev-1" },
+            validationStatus: "valid"
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        )
+      );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const publisher = createPublisher({
+      pds: "https://bsky.social",
+      identifier: "did:plc:abc123",
+      password: "app-password"
+    });
+
+    await publisher.startSession();
+    await publisher.createOrUpdatePublicationRecord(
+      {
+        $type: "site.standard.publication",
+        url: "https://example.com",
+        name: "Example",
+        preferences: { showInDiscover: true }
+      },
+      { iconPath }
+    );
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(`\tBlob file exceeds the 1 MB Standard.site limit: ${iconPath}`);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+
+    const createRecordCall = fetchMock.mock.calls[2][1] as RequestInit;
+    expect(JSON.parse(createRecordCall.body as string).record.icon).toBeUndefined();
+
+    consoleWarnSpy.mockRestore();
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
   it("warns when publication icon processing fails", async () => {
     const tempDir = mkdtempSync(join(tmpdir(), "stdsite-icon-fail-"));
     const iconPath = join(tempDir, "icon.png");

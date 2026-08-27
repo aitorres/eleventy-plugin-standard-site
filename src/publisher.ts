@@ -19,8 +19,11 @@ import {
   RGBColor
 } from "./types";
 import { extractRecordKey, normalizePdsUrl, normalizeIdentifier } from "./utils";
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync, statSync } from "fs";
 import mime from "mime-types";
+
+// Prescribed by the standard.site lexicon's max size for images
+const MAX_IMAGE_SIZE_BYTES = 1_000_000;
 
 /** Creates a {@link Publisher} that authenticates to the PDS and syncs records. */
 export function createPublisher({ pds, identifier, password }: PublisherOptions): Publisher {
@@ -104,6 +107,11 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
 
     if (!existsSync(filePath)) {
       console.warn(`\tBlob file not found: ${filePath}`);
+      return undefined;
+    }
+
+    if (statSync(filePath).size > MAX_IMAGE_SIZE_BYTES) {
+      console.warn(`\tBlob file exceeds the ${MAX_IMAGE_SIZE_BYTES / 1_000_000} MB Standard.site limit: ${filePath}`);
       return undefined;
     }
 
