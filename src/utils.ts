@@ -34,6 +34,13 @@ export function normalizePublicationUrl(url: string): string {
   return normalizedUrl;
 }
 
+/** Validates that a document path can be combined with a publication URL. */
+export function validateDocumentPath(path: string): void {
+  if (!path.startsWith("/")) {
+    throw new Error("Document path must start with '/'.");
+  }
+}
+
 /** Normalizes an identifier by trimming whitespace (and stripping a leading `@` from handles). */
 export function normalizeIdentifier(identifier: string): string {
   let normalizedIdentifier = identifier.trim();

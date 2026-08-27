@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { extractRecordKey, normalizePdsUrl, normalizePublicationUrl, normalizeIdentifier } from "../src/utils";
+import {
+  extractRecordKey,
+  normalizePdsUrl,
+  normalizePublicationUrl,
+  normalizeIdentifier,
+  validateDocumentPath
+} from "../src/utils";
 
 describe("extractRecordKey", () => {
   it("extracts the record key from a URI", () => {
@@ -64,6 +70,16 @@ describe("normalizePublicationUrl", () => {
 
   it("throws when the URL is empty", () => {
     expect(() => normalizePublicationUrl("   ")).toThrow("Publication URL cannot be empty after normalization.");
+  });
+});
+
+describe("validateDocumentPath", () => {
+  it("accepts a path that starts with a slash", () => {
+    expect(() => validateDocumentPath("/posts/hello/")).not.toThrow();
+  });
+
+  it("rejects a path without a leading slash", () => {
+    expect(() => validateDocumentPath("posts/hello/")).toThrow("Document path must start with '/'.");
   });
 });
 

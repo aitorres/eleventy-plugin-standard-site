@@ -1,7 +1,7 @@
 import { createPublisher } from "./publisher";
 import { LEXICONS, Publication, StandardSitePluginOptions, Document, DEFAULT_PDS_URL } from "./types";
 import { injectDocumentLinkTag, injectPublicationLinkTags } from "./link-tags";
-import { normalizePublicationUrl } from "./utils";
+import { normalizePublicationUrl, validateDocumentPath } from "./utils";
 import { convert } from "html-to-text";
 import path from "path";
 import fs from "fs";
@@ -73,6 +73,10 @@ export default function pluginStandardSite(
   });
 
   eleventyConfig.on("eleventy.after", async ({ dir }) => {
+    for (const post of standardSiteDocumentPosts) {
+      validateDocumentPath(post.url);
+    }
+
     const publisher = createPublisher(resolvedOptions);
 
     const resolveAssetPath = (assetPath?: string): string | undefined =>

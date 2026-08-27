@@ -192,6 +192,28 @@ describe("pluginStandardSite", () => {
     );
   });
 
+  it("rejects a document URL without a leading slash before publishing", async () => {
+    const config = makeEleventyConfig();
+    const createPublisherSpy = vi.spyOn(publisherModule, "createPublisher");
+
+    pluginStandardSite(config, baseOptions);
+
+    const collectionCallback = config.addCollection.mock.calls[0][1];
+    collectionCallback({
+      getAll: () => [
+        {
+          url: "posts/hello/",
+          date: new Date("2026-01-01T00:00:00.000Z"),
+          data: { title: "Hello", standardSiteDocument: true }
+        }
+      ]
+    });
+
+    const afterHandler = config._handlers["eleventy.after"];
+    await expect(afterHandler({ dir: { output: "/tmp/output" } })).rejects.toThrow("Document path must start with '/'.");
+    expect(createPublisherSpy).not.toHaveBeenCalled();
+  });
+
   it("derives textContent from templateContent by stripping HTML tags", async () => {
     const config = makeEleventyConfig();
     vi.spyOn(console, "log").mockImplementation(() => {});
