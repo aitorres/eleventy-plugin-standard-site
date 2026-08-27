@@ -163,6 +163,35 @@ describe("pluginStandardSite", () => {
     expect(publicationRecord).toEqual(expect.not.objectContaining({ description: expect.anything() }));
   });
 
+  it("normalizes the publication URL before publishing", async () => {
+    const config = makeEleventyConfig();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(fs, "mkdirSync").mockImplementation(() => undefined);
+    vi.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
+
+    const mockPublisher = {
+      startSession: vi.fn().mockResolvedValue(undefined),
+      createOrUpdatePublicationRecord: vi
+        .fn()
+        .mockResolvedValue("at://did:plc:abc123/site.standard.publication/pub-key"),
+      createOrUpdateDocumentRecord: vi.fn().mockResolvedValue("at://did:plc:abc123/site.standard.document/doc-key")
+    };
+    vi.spyOn(publisherModule, "createPublisher").mockReturnValue(mockPublisher);
+
+    pluginStandardSite(config, { ...baseOptions, publicationUrl: "https://example.com/" });
+
+    const collectionCallback = config.addCollection.mock.calls[0][1];
+    collectionCallback({ getAll: () => [] });
+
+    const afterHandler = config._handlers["eleventy.after"];
+    await afterHandler({ dir: { output: "/tmp/output" } });
+
+    expect(mockPublisher.createOrUpdatePublicationRecord).toHaveBeenCalledWith(
+      expect.objectContaining({ url: "https://example.com" }),
+      expect.any(Object)
+    );
+  });
+
   it("derives textContent from templateContent by stripping HTML tags", async () => {
     const config = makeEleventyConfig();
     vi.spyOn(console, "log").mockImplementation(() => {});

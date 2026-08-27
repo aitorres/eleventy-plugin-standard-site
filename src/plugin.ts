@@ -1,6 +1,7 @@
 import { createPublisher } from "./publisher";
 import { LEXICONS, Publication, StandardSitePluginOptions, Document, DEFAULT_PDS_URL } from "./types";
 import { injectDocumentLinkTag, injectPublicationLinkTags } from "./link-tags";
+import { normalizePublicationUrl } from "./utils";
 import { convert } from "html-to-text";
 import path from "path";
 import fs from "fs";
@@ -88,7 +89,7 @@ export default function pluginStandardSite(
     // Get or create the publication record
     const publication: Publication = {
       $type: LEXICONS.publication,
-      url: resolvedOptions.publicationUrl,
+      url: normalizePublicationUrl(resolvedOptions.publicationUrl),
       name: resolvedOptions.publicationName,
       description: resolvedOptions.publicationDescription,
       preferences: {

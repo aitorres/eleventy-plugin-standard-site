@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { extractRecordKey, normalizePdsUrl, normalizeIdentifier } from "../src/utils";
+import { extractRecordKey, normalizePdsUrl, normalizePublicationUrl, normalizeIdentifier } from "../src/utils";
 
 describe("extractRecordKey", () => {
   it("extracts the record key from a URI", () => {
@@ -54,6 +54,16 @@ describe("normalizePdsUrl", () => {
 
   it("throws when URL becomes empty after removing trailing slash", () => {
     expect(() => normalizePdsUrl("/")).toThrow("PDS URL cannot be empty after normalization.");
+  });
+});
+
+describe("normalizePublicationUrl", () => {
+  it("trims whitespace and removes trailing slashes", () => {
+    expect(normalizePublicationUrl("  https://example.com/blog///  ")).toBe("https://example.com/blog");
+  });
+
+  it("throws when the URL is empty", () => {
+    expect(() => normalizePublicationUrl("   ")).toThrow("Publication URL cannot be empty after normalization.");
   });
 });
 

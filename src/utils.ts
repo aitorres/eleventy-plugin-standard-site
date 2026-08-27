@@ -23,6 +23,17 @@ export function normalizePdsUrl(url: string): string {
   return normalizedUrl;
 }
 
+/** Normalizes a publication URL by trimming whitespace and trailing slashes. */
+export function normalizePublicationUrl(url: string): string {
+  const normalizedUrl = url.trim().replace(/\/+$/, "");
+
+  if (normalizedUrl.length === 0) {
+    throw new Error("Publication URL cannot be empty after normalization.");
+  }
+
+  return normalizedUrl;
+}
+
 /** Normalizes an identifier by trimming whitespace (and stripping a leading `@` from handles). */
 export function normalizeIdentifier(identifier: string): string {
   let normalizedIdentifier = identifier.trim();
