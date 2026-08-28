@@ -210,7 +210,9 @@ describe("pluginStandardSite", () => {
     });
 
     const afterHandler = config._handlers["eleventy.after"];
-    await expect(afterHandler({ dir: { output: "/tmp/output" } })).rejects.toThrow("Document path must start with '/'.");
+    await expect(afterHandler({ dir: { output: "/tmp/output" } })).rejects.toThrow(
+      "Document path must start with '/'."
+    );
     expect(createPublisherSpy).not.toHaveBeenCalled();
   });
 
