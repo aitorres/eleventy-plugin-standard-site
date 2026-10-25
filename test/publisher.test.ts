@@ -452,6 +452,10 @@ describe("createPublisher", () => {
                   url: "https://example.com",
                   name: "Existing",
                   description: "Existing description",
+                  labels: {
+                    $type: "com.atproto.label.defs#selfLabels",
+                    values: [{ val: "graphic-media" }]
+                  },
                   preferences: {
                     showInDiscover: true
                   }
@@ -514,6 +518,12 @@ describe("createPublisher", () => {
       "https://bsky.social/xrpc/com.atproto.repo.putRecord",
       expect.objectContaining({ method: "POST" })
     );
+
+    const updateRecordCall = fetchMock.mock.calls[2][1] as RequestInit;
+    expect(JSON.parse(updateRecordCall.body as string).record.labels).toEqual({
+      $type: "com.atproto.label.defs#selfLabels",
+      values: [{ val: "graphic-media" }]
+    });
   });
 
   it("throws when creating or updating document before session starts", async () => {
@@ -626,6 +636,7 @@ describe("createPublisher", () => {
                   title: "Existing post",
                   publishedAt: "2026-01-01T00:00:00.000Z",
                   path: "/posts/a-post/"
+                  ,tags: ["existing-tag"]
                 }
               }
             ]
@@ -683,6 +694,9 @@ describe("createPublisher", () => {
       "https://bsky.social/xrpc/com.atproto.repo.putRecord",
       expect.objectContaining({ method: "POST" })
     );
+
+    const updateRecordCall = fetchMock.mock.calls[2][1] as RequestInit;
+    expect(JSON.parse(updateRecordCall.body as string).record.tags).toEqual(["existing-tag"]);
   });
 
   it("creates a publication record with theme colors", async () => {
@@ -1082,7 +1096,7 @@ describe("createPublisher", () => {
 
     const putRecordCall = fetchMock.mock.calls[4][1] as RequestInit;
     const putRecordBody = JSON.parse(putRecordCall.body as string);
-    expect(putRecordBody.record.icon).toBeUndefined();
+    expect(putRecordBody.record.icon.ref.$link).toBe("bafkrei-existing");
 
     consoleWarnSpy.mockRestore();
     rmSync(tempDir, { recursive: true, force: true });
@@ -1585,7 +1599,7 @@ describe("createPublisher", () => {
 
     const putRecordCall = fetchMock.mock.calls[4][1] as RequestInit;
     const putRecordBody = JSON.parse(putRecordCall.body as string);
-    expect(putRecordBody.record.coverImage).toBeUndefined();
+    expect(putRecordBody.record.coverImage.ref.$link).toBe("bafkrei-existing-cover");
 
     consoleWarnSpy.mockRestore();
     rmSync(tempDir, { recursive: true, force: true });

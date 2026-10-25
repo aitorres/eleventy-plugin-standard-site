@@ -315,15 +315,15 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
     ) => {
       checkSession();
 
-      const publicationToPublish: Publication = { ...publication };
+      // Try getting existing record to determine if we need to create or update
+      const existingRecords = await getPublicationRecords();
+      const existingRecord = existingRecords.find((record) => record.url === publication.url);
+      const { uri: _existingRecordUri, ...existingPublication } = existingRecord ?? {};
+      const publicationToPublish: Publication = { ...existingPublication, ...publication };
 
       if (options?.themeColors) {
         publicationToPublish.basicTheme = colorConfigToBasicTheme(options.themeColors);
       }
-
-      // Try getting existing record to determine if we need to create or update
-      const existingRecords = await getPublicationRecords();
-      const existingRecord = existingRecords.find((record) => record.url === publication.url);
 
       const resolvedIconBlob = await resolveBlobFromPath({
         filePath: options?.iconPath,
@@ -359,11 +359,11 @@ export function createPublisher({ pds, identifier, password }: PublisherOptions)
     ): Promise<string> => {
       checkSession();
 
-      const documentToPublish: Document = { ...document };
-
       // Try getting existing record to determine if we need to create or update
       const existingRecords = await getSiteDocumentRecords(document.site);
       const existingRecord = existingRecords.find((record) => record.path === document.path);
+      const { uri: _existingRecordUri, ...existingDocument } = existingRecord ?? {};
+      const documentToPublish: Document = { ...existingDocument, ...document };
 
       const resolvedCoverImageBlob = await resolveBlobFromPath({
         filePath: options?.coverImagePath,

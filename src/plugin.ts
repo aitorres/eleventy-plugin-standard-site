@@ -1,5 +1,11 @@
 import { createPublisher } from "./publisher";
-import { LEXICONS, Publication, StandardSitePluginOptions, Document, DEFAULT_PDS_URL } from "./types";
+import {
+  LEXICONS,
+  Publication,
+  StandardSitePluginOptions,
+  Document,
+  DEFAULT_PDS_URL
+} from "./types";
 import { injectDocumentLinkTag, injectPublicationLinkTags } from "./link-tags";
 import { normalizePublicationUrl, validateDocumentPath } from "./utils";
 import { convert } from "html-to-text";

@@ -19,7 +19,7 @@ export const LEXICONS = {
   rgbColor: "site.standard.theme.color#rgb"
 };
 
-/** An RGB color with channel values in the 0–255 range. */
+/** An RGB color with channel values in the 0-255 range. */
 export interface RGBColor {
   r: number;
   g: number;
