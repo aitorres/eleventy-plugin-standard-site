@@ -635,8 +635,8 @@ describe("createPublisher", () => {
                   site: "at://did:plc:abc123/site.standard.publication/publication-key",
                   title: "Existing post",
                   publishedAt: "2026-01-01T00:00:00.000Z",
-                  path: "/posts/a-post/"
-                  ,tags: ["existing-tag"]
+                  path: "/posts/a-post/",
+                  tags: ["existing-tag"]
                 }
               }
             ]

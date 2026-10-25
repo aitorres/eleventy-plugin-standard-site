@@ -72,12 +72,15 @@ standardSiteDocument: true
 description: "This is the description of my first post."
 bskyPostRef: "at://did:plc:abc123/app.bsky.feed.post/def456"
 coverImagePath: "./path/to/cover/image.jpg"
+tags: ["atproto", "eleventy"]
 ---
 ```
 
 The `date` field is used as the `publishedAt` value for the document record. You can refer to [Eleventy documentation on content dates](https://www.11ty.dev/docs/dates/) for alternatives.
 
 The `textContent` field of the document record is automatically derived from the page's rendered HTML output (with tags stripped), unless `includeTextContent` is set to `false` on the plugin config.
+
+The plugin creates `content` from each post's rendered HTML. It uses the `site.standard.content#html` type and an `html` value containing the post's `templateContent`.
 
 Additionally, after publishing, a generated document page will include the following two `link` tags (and any other HTML page will include the first one):
 

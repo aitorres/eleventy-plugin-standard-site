@@ -1,11 +1,5 @@
 import { createPublisher } from "./publisher";
-import {
-  LEXICONS,
-  Publication,
-  StandardSitePluginOptions,
-  Document,
-  DEFAULT_PDS_URL
-} from "./types";
+import { LEXICONS, Publication, StandardSitePluginOptions, Document, DEFAULT_PDS_URL } from "./types";
 import { injectDocumentLinkTag, injectPublicationLinkTags } from "./link-tags";
 import { normalizePublicationUrl, validateDocumentPath } from "./utils";
 import { convert } from "html-to-text";
@@ -39,6 +33,7 @@ interface EleventyCollectionItemData {
   title: string;
   description?: string;
   bskyPostRef?: string;
+  tags?: string[];
   standardSiteDocument?: boolean;
   coverImagePath?: string;
 }
@@ -130,6 +125,14 @@ export default function pluginStandardSite(
         path: post.url,
         description: post.data.description,
         bskyPostRef: post.data.bskyPostRef,
+        content:
+          post.templateContent === undefined
+            ? undefined
+            : {
+                $type: LEXICONS.documentContentHtml,
+                html: post.templateContent
+              },
+        tags: post.data.tags,
         textContent:
           resolvedOptions.includeTextContent && post.templateContent !== undefined
             ? htmlToPlainText(post.templateContent)

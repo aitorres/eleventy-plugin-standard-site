@@ -100,7 +100,13 @@ describe("pluginStandardSite", () => {
     const fakePost = {
       url: "/posts/hello/",
       date: new Date("2026-01-01T00:00:00.000Z"),
-      data: { title: "Hello", description: "World" }
+      data: {
+        title: "Hello",
+        description: "World",
+        standardSiteDocument: true,
+        tags: ["atproto", "eleventy"]
+      },
+      templateContent: "<h1>Hello</h1>"
     };
 
     pluginStandardSite(config, baseOptions);
@@ -108,7 +114,7 @@ describe("pluginStandardSite", () => {
     // Simulate the collection being populated
     const collectionCallback = config.addCollection.mock.calls[0][1];
     collectionCallback({
-      getAll: () => [{ ...fakePost, data: { ...fakePost.data, standardSiteDocument: true } }]
+      getAll: () => [fakePost]
     });
 
     const afterHandler = config._handlers["eleventy.after"];
@@ -121,7 +127,9 @@ describe("pluginStandardSite", () => {
         $type: "site.standard.document",
         title: "Hello",
         path: "/posts/hello/",
-        publishedAt: "2026-01-01T00:00:00.000Z"
+        publishedAt: "2026-01-01T00:00:00.000Z",
+        content: { $type: "site.standard.content#html", html: "<h1>Hello</h1>" },
+        tags: ["atproto", "eleventy"]
       })
     );
     expect(injectPublicationLinkTags).toHaveBeenCalledWith(
@@ -352,8 +360,10 @@ describe("pluginStandardSite", () => {
 
     const calledWith = mockPublisher.createOrUpdateDocumentRecord.mock.calls[0][0];
     expect(calledWith.description).toBeUndefined();
+    expect(calledWith.content).toBeUndefined();
     expect(calledWith.textContent).toBeUndefined();
     expect(calledWith.bskyPostRef).toBeUndefined();
+    expect(calledWith.tags).toBeUndefined();
   });
 
   it("continues processing remaining posts when one document sync fails", async () => {

@@ -15,6 +15,7 @@ export const ENDPOINTS = {
 export const LEXICONS = {
   publication: "site.standard.publication",
   document: "site.standard.document",
+  documentContentHtml: "site.standard.content#html",
   basicTheme: "site.standard.theme.basic",
   rgbColor: "site.standard.theme.color#rgb"
 };
@@ -71,6 +72,12 @@ export interface BlobRef {
   };
   mimeType: string;
   size: number;
+}
+
+/** HTML content generated from an Eleventy post. */
+export interface HtmlDocumentContent {
+  $type: typeof LEXICONS.documentContentHtml;
+  html: string;
 }
 
 /** Credentials and PDS configuration used to authenticate the publisher. */
@@ -137,8 +144,10 @@ export interface Document {
   path?: string;
   description?: string;
   coverImage?: BlobRef;
+  content?: HtmlDocumentContent;
   textContent?: string;
   bskyPostRef?: string;
+  tags?: string[];
 }
 
 /** A publication record paired with its AT URI. */
