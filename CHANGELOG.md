@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-10-28
+
+### Added
+
+- `site.standard.document` records now include two new properties:
+  - `content`, with HTML from each page's rendered content.
+  - `tags`, taken from the page's front matter when present.
+
+### Changed
+
+- Preserve existing record fields that are not supplied by an update.
+- Normalize publication URLs to prevent duplicate records.
+- Minor dependency updates.
+
+### Fixed
+
+- Validate document paths before connecting to the PDS.
+- Skip icons and cover images that exceed the 1 MB Standard.site limit.
+
 ## [1.0.0] - 2026-06-21
 
 We're live! 🎉
@@ -20,3 +39,4 @@ We're live! 🎉
   - Generates a `.well-known/site.standard.publication` endpoint in the output directory verifying the publication record's AT URI.
 
 [1.0.0]: https://github.com/aitorres/eleventy-plugin-standard-site/releases/tag/v1.0.0
+[1.1.0]: https://github.com/aitorres/eleventy-plugin-standard-site/releases/tag/v1.1.0
